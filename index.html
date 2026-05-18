@@ -3,211 +3,521 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自定義抽卡模擬器</title>
-    <style>
-        body { 
-            font-family: "Microsoft JhengHei", sans-serif; 
-            max-width: 600px; 
-            margin: 20px auto; 
-            padding: 20px; 
-            background-color: #f9f9f9;
-        }
-        .section { 
-            background: white;
-            border: 1px solid #ddd; 
-            padding: 20px; 
-            margin-bottom: 20px; 
-            border-radius: 10px; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .card-item { 
-            border-bottom: 1px dashed #eee; 
-            padding: 10px 0; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-        }
-        .card-item:last-child {
-            border-bottom: none;
-        }
-        button { 
-            padding: 8px 16px; 
-            cursor: pointer; 
-            border-radius: 5px;
-            border: none;
-            transition: 0.2s;
-        }
-        button:hover { opacity: 0.8; }
-        .btn-add { background: #28a745; color: white; }
-        .btn-delete { background: #dc3545; color: white; padding: 4px 8px; font-size: 0.9em;}
-        .btn-draw { 
-            width: 100%; 
-            font-size: 1.5em; 
-            padding: 15px; 
-            background: #007bff; 
-            color: white; 
-            font-weight: bold;
-        }
-        input { 
-            padding: 8px; 
-            margin-right: 5px; 
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            width: calc(50% - 15px);
-            margin-bottom: 10px;
-        }
-        #draw-result { 
-            font-size: 1.5em; 
-            font-weight: bold; 
-            color: #d9534f; 
-            margin-top: 15px; 
-            text-align: center; 
-            border: 3px dashed #f0ad4e; 
-            background: #fffcf5;
-            padding: 20px; 
-            border-radius: 10px;
-            display: none; 
-            animation: popIn 0.3s ease-out;
-        }
-        .effect-text { color: #555; font-size: 0.9em; margin-top: 5px; font-weight: normal; }
-        
-        @keyframes popIn {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-    </style>
+    <title>七日任務系統</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body>
-    <h2>🎲 自定義抽卡模擬器</h2>
+<body class="bg-gray-100 min-h-screen py-8 px-4">
+    <div class="max-w-4xl mx-auto space-y-6">
+        
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-black text-gray-800 tracking-tight">七日任務系統</span></h1>
+                <p class="text-gray-500 text-sm mt-1">連續堅持七天！</p>
+            </div>
+            <div class="flex gap-4 items-center w-full md:w-auto justify-between md:justify-end">
+                <button id="btn-reset-points" class="text-xs bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 px-3 rounded-xl transition border border-red-200 cursor-pointer">
+                    🔄 重置積分
+                </button>
+                <div class="flex gap-4">
+                    <div class="text-center bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
+                        <span class="block text-xs font-bold text-blue-500 uppercase tracking-wider">目前等級</span>
+                        <span id="display-level" class="text-3xl font-black text-blue-600">Lv.2</span>
+                    </div>
+                    <div class="text-center bg-amber-50 px-4 py-2 rounded-xl border border-amber-100">
+                        <span class="block text-xs font-bold text-amber-500 uppercase tracking-wider">目前積分</span>
+                        <span id="display-points" class="text-3xl font-black text-amber-600">7</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <div class="section">
-        <h3>✨ 新增卡牌到卡池</h3>
-        <input type="text" id="card-name" placeholder="請輸入卡牌名稱 (必填)">
-        <input type="text" id="card-effect" placeholder="請輸入卡牌效果 (選填)">
-        <button class="btn-add" onclick="addCard()">加入卡池</button>
-    </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+            <div class="flex justify-between text-xs font-bold text-gray-500 mb-1">
+                <span id="progress-text">升級進度</span>
+                <span id="progress-ratio">7 / 28</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
 
-    <div class="section">
-        <button class="btn-draw" onclick="drawCard()">抽一張卡！</button>
-        <div id="draw-result"></div>
-    </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div class="md:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between min-h-[320px]">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span class="flex h-3 w-3 relative">
+                            <span id="status-dot-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span id="status-dot" class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                        </span>
+                        當前挑戰狀態：<span id="challenge-status-text" class="text-gray-600">未開始</span>
+                    </h2>
+                    
+                    <div id="active-task-box" class="hidden my-6 p-6 bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl border border-gray-200 text-center">
+                        <span id="challenge-day-title" class="block text-xs font-extrabold text-blue-600 tracking-widest uppercase mb-1">DAY 1 任務</span>
+                        <p id="current-task-content" class="text-xl font-bold text-gray-800">請點擊按鈕抽取任務</p>
+                    </div>
 
-    <div class="section">
-        <h3>📦 目前卡池 (共 <span id="card-count">0</span> 張)</h3>
-        <div id="card-list"></div>
-        <hr style="border:0; border-top: 1px solid #eee; margin: 15px 0;">
-        <button class="btn-delete" onclick="clearPool()">清空所有卡池</button>
+                    <div id="penalty-task-box" class="hidden my-6 p-6 rounded-xl border text-center">
+                        <span id="penalty-type-title" class="block text-xs font-extrabold tracking-widest uppercase mb-1">❌ 挑戰失敗</span>
+                        <p id="penalty-task-content" class="text-xl font-bold whitespace-pre-line">懲罰內容</p>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button id="btn-start" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-md shadow-blue-200 cursor-pointer">
+                        🚀 開始七日任務挑戰
+                    </button>
+                    <div id="action-buttons" class="hidden grid grid-cols-2 gap-4">
+                        <button id="btn-complete" class="py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition shadow-md shadow-green-200 cursor-pointer">
+                            完成了
+                        </button>
+                        <button id="btn-fail" class="py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition shadow-md shadow-red-200 cursor-pointer">
+                            失敗了
+                        </button>
+                    </div>
+                    <button id="btn-close-penalty" class="hidden w-full py-3 px-4 text-white font-bold rounded-xl transition cursor-pointer">
+                        完成處罰，重頭來過
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">🗃️ 任務庫設定</h2>
+                
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">選擇庫別</label>
+                        <select id="select-pool" class="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="1">第一天任務庫</option>
+                            <option value="2">第二天任務庫</option>
+                            <option value="3">第三天任務庫</option>
+                            <option value="4">第四天任務庫</option>
+                            <option value="5">第五天任務庫</option>
+                            <option value="6">第六天任務庫</option>
+                            <option value="7">第七天任務庫</option>
+                            <option value="penalty">懲罰任務庫 (分天數)</option>
+                            <option value="hell">😈 地獄任務庫 (不分天數)</option>
+                        </select>
+                    </div>
+
+                    <div id="normal-input-box">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">任務內容</label>
+                        <input type="text" id="input-task" placeholder="輸入內容..." class="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div id="penalty-input-box" class="hidden space-y-2 bg-red-50 p-3 rounded-xl border border-red-100">
+                        <div>
+                            <label class="block text-xs font-bold text-red-700 mb-1">懲罰項目名稱</label>
+                            <input type="text" id="input-penalty-name" placeholder="例如：深蹲、開合跳" class="w-full p-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+                        </div>
+                        <label class="block text-xs font-bold text-red-600 mb-0">各天數失敗時的量化懲罰：</label>
+                        <div class="grid grid-cols-2 gap-2 text-xs text-gray-700">
+                            <div>D1: <input type="text" id="p-d1" placeholder="如: 50下" class="w-full p-1 bg-white border rounded"></div>
+                            <div>D2: <input type="text" id="p-d2" placeholder="如: 45下" class="w-full p-1 bg-white border rounded"></div>
+                            <div>D3: <input type="text" id="p-d3" placeholder="如: 40下" class="w-full p-1 bg-white border rounded"></div>
+                            <div>D4: <input type="text" id="p-d4" placeholder="如: 35下" class="w-full p-1 bg-white border rounded"></div>
+                            <div>D5: <input type="text" id="p-d5" placeholder="如: 30下" class="w-full p-1 bg-white border rounded"></div>
+                            <div>D6: <input type="text" id="p-d6" placeholder="如: 25下" class="w-full p-1 bg-white border rounded"></div>
+                            <div class="col-span-2">D7: <input type="text" id="p-d7" placeholder="如: 20下" class="w-full p-1 bg-white border rounded"></div>
+                        </div>
+                    </div>
+
+                    <button id="btn-add-task" class="w-full py-2 px-4 bg-gray-800 hover:bg-gray-700 text-white text-sm font-bold rounded-lg transition cursor-pointer">
+                        ➕ 新增到任務庫
+                    </button>
+                </div>
+
+                <div class="mt-6 border-t border-gray-100 pt-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold text-gray-500">當前庫內任務：</span>
+                        <span id="task-count" class="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">0 個</span>
+                    </div>
+                    <ul id="task-list" class="space-y-1.5 max-h-[180px] overflow-y-auto text-xs text-gray-600 pr-1">
+                        </ul>
+                </div>
+            </div>
+
+        </div>
     </div>
 
     <script>
-        let cardPool = [];
-
-        // 網頁載入時，自動讀取 localStorage 中的存檔
-        window.onload = function() {
-            loadCards();
+        // --- 核心狀態管理 ---
+        const INITIAL_POINTS = 7; // 初始積分改為 7 分
+        
+        let state = {
+            points: INITIAL_POINTS,
+            level: 2, // 初始 7 分即為等級二
+            currentDay: 0, 
+            isChallengeActive: false,
+            inPenaltyMode: false,
+            inHellMode: false, // 地獄模式旗標
+            currentTask: '',
+            currentPenalty: '',
+            pools: {
+                1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [],
+                penalty: [], // 改為存放物件型態 [{ name: '', days: {1:'', 2:''...} }]
+                hell: []     // 新增地獄任務庫
+            }
         };
 
-        // 從瀏覽器記憶體讀取資料
-        function loadCards() {
-            const savedCards = localStorage.getItem('gachaCardPool');
-            if (savedCards) {
-                cardPool = JSON.parse(savedCards);
+        const levelThresholds = [0, 7, 28, 91, 280, 847, 2548]; 
+
+        function loadData() {
+            const local = localStorage.getItem('seven_day_challenge_state');
+            if (local) {
+                const parsed = JSON.parse(local);
+                // 確保升級後舊帳號能相容新欄位
+                if (!parsed.pools.hell) parsed.pools.hell = [];
+                if (parsed.inHellMode === undefined) parsed.inHellMode = false;
+                state = parsed;
+            } else {
+                state.points = INITIAL_POINTS;
             }
-            renderPool();
+            updateUI();
         }
 
-        // 將資料存入瀏覽器記憶體
-        function saveCards() {
-            localStorage.setItem('gachaCardPool', JSON.stringify(cardPool));
+        function saveData() {
+            localStorage.setItem('seven_day_challenge_state', JSON.stringify(state));
         }
 
-        // 新增卡牌
-        function addCard() {
-            const nameInput = document.getElementById('card-name');
-            const effectInput = document.getElementById('card-effect');
-            const name = nameInput.value.trim();
-            const effect = effectInput.value.trim();
+        function calculateLevelAndProgress() {
+            let currentLevel = 1;
+            for (let i = 1; i < levelThresholds.length; i++) {
+                if (state.points >= levelThresholds[i]) {
+                    currentLevel = i + 1;
+                } else {
+                    break;
+                }
+            }
+            state.level = currentLevel;
 
-            if (!name) {
-                alert("請至少輸入「卡牌名稱」喔！");
+            let progressRatio = 100;
+            let text = "最高等級";
+            let ratioText = `${state.points} 分`;
+
+            if (state.level < 7) {
+                const currentFloor = levelThresholds[state.level - 1];
+                const nextCeil = levelThresholds[state.level];
+                const gainedInThisLevel = state.points - currentFloor;
+                const totalNeededInThisLevel = nextCeil - currentFloor;
+                
+                progressRatio = Math.min(100, (gainedInThisLevel / totalNeededInThisLevel) * 100);
+                text = `距離 Lv.${state.level + 1}`;
+                ratioText = `${state.points} / ${nextCeil}`;
+            }
+
+            return { currentLevel, progressRatio, text, ratioText };
+        }
+
+        // --- UI 更新邏輯 ---
+        function updateUI() {
+            const { currentLevel, progressRatio, text, ratioText } = calculateLevelAndProgress();
+            
+            document.getElementById('display-level').innerText = `Lv.${currentLevel}`;
+            document.getElementById('display-points').innerText = state.points;
+            document.getElementById('progress-text').innerText = text;
+            document.getElementById('progress-ratio').innerText = ratioText;
+            document.getElementById('progress-bar').style.width = `${progressRatio}%`;
+
+            const statusDot = document.getElementById('status-dot');
+            const statusDotPing = document.getElementById('status-dot-ping');
+            const statusText = document.getElementById('challenge-status-text');
+            const activeBox = document.getElementById('active-task-box');
+            const penaltyBox = document.getElementById('penalty-task-box');
+            
+            const btnStart = document.getElementById('btn-start');
+            const actionBtns = document.getElementById('action-buttons');
+            const btnClosePenalty = document.getElementById('btn-close-penalty');
+
+            activeBox.classList.add('hidden');
+            penaltyBox.classList.add('hidden');
+            btnStart.classList.add('hidden');
+            actionBtns.classList.add('hidden');
+            btnClosePenalty.classList.add('hidden');
+
+            if (state.inHellMode) {
+                // 地獄狀態 UI
+                statusDot.className = "relative inline-flex rounded-full h-3 w-3 bg-purple-600";
+                statusDotPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75";
+                statusText.innerText = "🚨 墮入地獄歷練中";
+                statusText.className = "text-purple-600 font-black animate-pulse";
+                
+                penaltyBox.className = "my-6 p-6 bg-purple-900 border border-purple-950 rounded-xl text-center text-white shadow-lg shadow-purple-100";
+                document.getElementById('penalty-type-title').innerText = "💀 積分歸零！強制觸發地獄任務 💀";
+                document.getElementById('penalty-type-title').className = "block text-xs font-extrabold text-purple-300 tracking-widest uppercase mb-1";
+                document.getElementById('penalty-task-content').innerText = state.currentPenalty;
+                document.getElementById('penalty-task-content').className = "text-xl font-black text-amber-300 mt-2";
+                
+                btnClosePenalty.className = "w-full py-3 px-4 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl transition cursor-pointer shadow-md";
+                btnClosePenalty.innerText = "⚔️ 完成地獄歷練，重返人間 (積分回歸初始值)";
+                
+                penaltyBox.classList.remove('hidden');
+                btnClosePenalty.classList.remove('hidden');
+
+            } else if (state.inPenaltyMode) {
+                // 一般懲罰 UI
+                statusDot.className = "relative inline-flex rounded-full h-3 w-3 bg-red-500";
+                statusDotPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75";
+                statusText.innerText = "接受懲罰中";
+                statusText.className = "text-red-600 font-bold";
+                
+                penaltyBox.className = "my-6 p-6 bg-red-50 border border-red-200 rounded-xl text-center text-gray-800";
+                document.getElementById('penalty-type-title').innerText = "❌ 挑戰失敗！觸發日常量化懲罰";
+                document.getElementById('penalty-type-title').className = "block text-xs font-extrabold text-red-600 tracking-widest uppercase mb-1";
+                document.getElementById('penalty-task-content').innerText = state.currentPenalty;
+                document.getElementById('penalty-task-content').className = "text-xl font-bold text-red-700 mt-2";
+
+                btnClosePenalty.className = "w-full py-3 px-4 bg-gray-800 hover:bg-gray-900 text-white font-bold rounded-xl transition cursor-pointer";
+                btnClosePenalty.innerText = "承擔完日常懲罰，重頭來過";
+                
+                penaltyBox.classList.remove('hidden');
+                btnClosePenalty.classList.remove('hidden');
+
+            } else if (state.isChallengeActive) {
+                // 挑戰進行中
+                statusDot.className = "relative inline-flex rounded-full h-3 w-3 bg-blue-500";
+                statusDotPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75";
+                statusText.innerText = `第 ${state.currentDay} 天挑戰中`;
+                statusText.className = "text-blue-600 font-bold";
+
+                activeBox.classList.remove('hidden');
+                document.getElementById('challenge-day-title').innerText = `DAY ${state.currentDay} 任務`;
+                document.getElementById('current-task-content').innerText = state.currentTask;
+                actionBtns.classList.remove('hidden');
+            } else {
+                // 未開始
+                statusDot.className = "relative inline-flex rounded-full h-3 w-3 bg-gray-400";
+                statusDotPing.className = "hidden";
+                statusText.innerText = "未開始";
+                statusText.className = "text-gray-500";
+
+                btnStart.classList.remove('hidden');
+            }
+
+            renderAdminTaskList();
+        }
+
+        // --- 任務管理介面切換與渲染 ---
+        document.getElementById('select-pool').addEventListener('change', (e) => {
+            const val = e.target.value;
+            const normalBox = document.getElementById('normal-input-box');
+            const penaltyBox = document.getElementById('penalty-input-box');
+            
+            if (val === 'penalty') {
+                normalBox.classList.add('hidden');
+                penaltyBox.classList.remove('hidden');
+            } else {
+                normalBox.classList.remove('hidden');
+                penaltyBox.classList.add('hidden');
+            }
+            renderAdminTaskList();
+        });
+
+        function renderAdminTaskList() {
+            const currentSelectedPool = document.getElementById('select-pool').value;
+            const listContainer = document.getElementById('task-list');
+            const tasks = state.pools[currentSelectedPool] || [];
+            
+            document.getElementById('task-count').innerText = `${tasks.length} 個`;
+            listContainer.innerHTML = '';
+
+            if (tasks.length === 0) {
+                listContainer.innerHTML = `<li class="text-gray-400 italic text-center py-2">目前庫內沒有任務。</li>`;
                 return;
             }
 
-            // 將新卡牌加入陣列
-            cardPool.push({ name: name, effect: effect });
-            
-            saveCards(); // 存檔
-            renderPool(); // 重新渲染畫面
+            tasks.forEach((task, index) => {
+                const li = document.createElement('li');
+                li.className = "flex justify-between items-center bg-gray-50 p-2 rounded-lg border border-gray-100 group";
+                
+                let displayText = "";
+                if (currentSelectedPool === 'penalty') {
+                    // 懲罰庫物件格式顯示
+                    displayText = typeof task === 'string' ? `[舊] ${task}` : `【${task.name}】D1:${task.days[1]} ~ D7:${task.days[7]}`;
+                } else {
+                    displayText = task;
+                }
 
-            // 清空輸入框方便下次輸入
-            nameInput.value = '';
-            effectInput.value = '';
-        }
-
-        // 刪除單一卡牌
-        function removeCard(index) {
-            cardPool.splice(index, 1);
-            saveCards();
-            renderPool();
-        }
-
-        // 清空整個卡池
-        function clearPool() {
-            if (cardPool.length === 0) return;
-            if (confirm("確定要清空所有卡牌嗎？這個動作無法復原喔！")) {
-                cardPool = [];
-                saveCards();
-                renderPool();
-                document.getElementById('draw-result').style.display = 'none';
-            }
-        }
-
-        // 抽卡邏輯
-        function drawCard() {
-            if (cardPool.length === 0) {
-                alert("卡池裡現在沒有卡牌！請先在上方新增卡牌。");
-                return;
-            }
-
-            // 產生 0 到 (卡池總數-1) 的隨機亂數
-            const randomIndex = Math.floor(Math.random() * cardPool.length);
-            const result = cardPool[randomIndex];
-            
-            const resultDiv = document.getElementById('draw-result');
-            
-            // 重新觸發動畫的小技巧
-            resultDiv.style.display = 'none';
-            setTimeout(() => {
-                resultDiv.innerHTML = `
-                    🎉 抽中了：<br><br>
-                    【 ${result.name} 】<br>
-                    <div class="effect-text">效果：${result.effect || '無特別效果'}</div>
+                li.innerHTML = `
+                    <span class="truncate max-w-[200px]" title="${currentSelectedPool === 'penalty' && typeof task !== 'string' ? '各天懲罰詳情已整合' : displayText}">${displayText}</span>
+                    <button onclick="deleteTask('${currentSelectedPool}', ${index})" class="text-red-400 hover:text-red-600 font-bold opacity-0 group-hover:opacity-100 transition cursor-pointer ml-2">
+                        刪除
+                    </button>
                 `;
-                resultDiv.style.display = 'block';
-            }, 50);
-        }
-
-        // 將卡池陣列渲染到網頁上
-        function renderPool() {
-            const listDiv = document.getElementById('card-list');
-            const countSpan = document.getElementById('card-count');
-            
-            listDiv.innerHTML = ''; // 先清空目前的列表
-            countSpan.innerText = cardPool.length;
-
-            cardPool.forEach((card, index) => {
-                const item = document.createElement('div');
-                item.className = 'card-item';
-                item.innerHTML = `
-                    <div>
-                        <strong>${card.name}</strong> 
-                        <div class="effect-text">${card.effect || '無效果'}</div>
-                    </div>
-                    <button class="btn-delete" onclick="removeCard(${index})">刪除</button>
-                `;
-                listDiv.appendChild(item);
+                listContainer.appendChild(li);
             });
         }
+
+        // --- 核心功能觸發與邏輯計算 ---
+
+        function getRandomTask(poolKey) {
+            const pool = state.pools[poolKey];
+            if (!pool || pool.length === 0) return null;
+            const randomIndex = Math.floor(Math.random() * pool.length);
+            return pool[randomIndex];
+        }
+
+        // 新增任務按鈕
+        document.getElementById('btn-add-task').addEventListener('click', () => {
+            const poolKey = document.getElementById('select-pool').value;
+            
+            if (poolKey === 'penalty') {
+                const name = document.getElementById('input-penalty-name').value.trim();
+                const d1 = document.getElementById('p-d1').value.trim();
+                const d2 = document.getElementById('p-d2').value.trim();
+                const d3 = document.getElementById('p-d3').value.trim();
+                const d4 = document.getElementById('p-d4').value.trim();
+                const d5 = document.getElementById('p-d5').value.trim();
+                const d6 = document.getElementById('p-d6').value.trim();
+                const d7 = document.getElementById('p-d7').value.trim();
+
+                if (!name || !d1 || !d2 || !d3 || !d4 || !d5 || !d6 || !d7) {
+                    alert('⚠️ 請填寫完整的懲罰項目名稱，並設定第 1 到第 7 天的全部量化內容！');
+                    return;
+                }
+
+                state.pools.penalty.push({
+                    name: name,
+                    days: { 1: d1, 2: d2, 3: d3, 4: d4, 5: d5, 6: d6, 7: d7 }
+                });
+
+                // 清空輸入
+                document.getElementById('input-penalty-name').value = '';
+                for(let i=1; i<=7; i++) document.getElementById(`p-d${i}`).value = '';
+
+            } else {
+                const input = document.getElementById('input-task');
+                const taskContent = input.value.trim();
+                if (!taskContent) {
+                    alert('請輸入合法的任務內容！');
+                    return;
+                }
+                state.pools[poolKey].push(taskContent);
+                input.value = '';
+            }
+
+            saveData();
+            renderAdminTaskList();
+        });
+
+        // 刪除功能
+        window.deleteTask = function(poolKey, index) {
+            state.pools[poolKey].splice(index, 1);
+            saveData();
+            renderAdminTaskList();
+        }
+
+        // 重置積分功能
+        document.getElementById('btn-reset-points').addEventListener('click', () => {
+            if (confirm('⚠️ 確定要重置積分嗎？\n這將使你的積分變回初始值 7 分（任務庫將保留，需手動刪除）。')) {
+                state.points = INITIAL_POINTS;
+                state.isChallengeActive = false;
+                state.inPenaltyMode = false;
+                state.inHellMode = false;
+                state.currentDay = 0;
+                state.currentTask = '';
+                state.currentPenalty = '';
+                saveData();
+                updateUI();
+                alert('積分已成功重置為 7 分（從等級二重新啟動）！');
+            }
+        });
+
+        // 開始挑戰
+        document.getElementById('btn-start').addEventListener('click', () => {
+            if (!state.pools[1] || state.pools[1].length === 0) {
+                alert('⚠️ 啟動失敗！請先在右側的「第一天任務庫」中至少新增一個任務。');
+                return;
+            }
+            state.isChallengeActive = true;
+            state.currentDay = 1;
+            state.currentTask = getRandomTask(1);
+            saveData();
+            updateUI();
+        });
+
+        // 完成任務
+        document.getElementById('btn-complete').addEventListener('click', () => {
+            if (state.currentDay < 7) {
+                const nextDay = state.currentDay + 1;
+                if (!state.pools[nextDay] || state.pools[nextDay].length === 0) {
+                    alert(`⚠️ 無法前進！請先去右側的「第 ${nextDay} 天任務庫」新增任務。`);
+                    return;
+                }
+                state.currentDay = nextDay;
+                state.currentTask = getRandomTask(nextDay);
+                alert(`🎉 順利通過第 ${nextDay - 1} 天，進入第 ${nextDay} 天！`);
+            } else {
+                state.points += 7;
+                state.isChallengeActive = false;
+                state.currentDay = 0;
+                state.currentTask = '';
+                alert('🏆 恭喜！成功通過整週的七日任務！獲得 7 積分！');
+            }
+            saveData();
+            updateUI();
+        });
+
+        // 任務失敗 (核心判定機制更新)
+        document.getElementById('btn-fail').addEventListener('click', () => {
+            const loss = 8 - state.currentDay;
+            state.points -= loss; // 扣除對應日期分數
+
+            // 檢查是否觸發地獄條件 (積分小於等於 0)
+            if (state.points <= 0) {
+                state.points = INITIAL_POINTS; // 積分變回初始值 7
+                
+                const hellTask = getRandomTask('hell');
+                if (hellTask) {
+                    state.inHellMode = true;
+                    state.inPenaltyMode = false;
+                    state.currentPenalty = hellTask;
+                    alert(`💥 慘烈！扣分後積分低於 0！\n觸發地獄機制：積分回歸初始值 7，並強制隨機執行一個地獄任務！`);
+                } else {
+                    state.inHellMode = false;
+                    state.inPenaltyMode = false;
+                    alert(`💥 扣分後積分低於 0！積分已重置回 7 分。\n(因地獄任務庫是空的，你幸運逃過地獄懲罰)`);
+                }
+            } else {
+                // 進入常規分天量化懲罰
+                const penaltyObj = getRandomTask('penalty');
+                if (penaltyObj) {
+                    state.inPenaltyMode = true;
+                    state.inHellMode = false;
+                    
+                    if (typeof penaltyObj === 'string') {
+                        // 相容舊格式舊資料
+                        state.currentPenalty = penaltyObj;
+                    } else {
+                        // 讀取當天專屬的量化單位
+                        const detail = penaltyObj.days[state.currentDay] || '無特別標記內容';
+                        state.currentPenalty = `項目：【${penaltyObj.name}】\n因在第 ${state.currentDay} 天失敗，請執行：${detail}`;
+                    }
+                } else {
+                    alert(`💥 挑戰在第 ${state.currentDay} 天失敗！扣除 ${loss} 積分。\n(常規懲罰庫是空的，豁免執行懲罰)`);
+                }
+            }
+
+            // 重置當前挑戰
+            state.isChallengeActive = false;
+            state.currentDay = 0;
+            state.currentTask = '';
+            
+            saveData();
+            updateUI();
+        });
+
+        // 關閉懲罰/地獄模式
+        document.getElementById('btn-close-penalty').addEventListener('click', () => {
+            state.inPenaltyMode = false;
+            state.inHellMode = false;
+            state.currentPenalty = '';
+            saveData();
+            updateUI();
+        });
+
+        window.onload = loadData;
     </script>
 </body>
 </html>
