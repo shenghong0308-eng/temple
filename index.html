@@ -3,524 +3,402 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>挑戰系統</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>長期挑戰任務系統</title>
     <style>
-        /* 自訂動畫：卡牌翻轉效果 */
-        .flip-card {
-            perspective: 1000px;
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --primary: #bb86fc;
+            --text: #ffffff;
+            --text-secondary: #aaaaaa;
+            --danger: #cf6679;
+            --success: #03dac6;
         }
-        .flip-card-inner {
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 15px;
+            box-sizing: border-box;
         }
-        .flipped {
-            transform: rotateY(180deg);
+        .container { max-width: 500px; margin: 0 auto; }
+        .view { display: none; }
+        .view.active { display: block; }
+        h1, h2, h3 { text-align: center; color: var(--primary); }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-        .flip-front, .flip-back {
-            backface-visibility: hidden;
+        .streak-display { font-size: 24px; text-align: center; font-weight: bold; color: var(--success); }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            cursor: pointer;
         }
-        .flip-back {
-            transform: rotateY(180deg);
+        button.secondary { background: #333; color: var(--text); }
+        button.danger { background: var(--danger); color: #000; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 4px; color: var(--text-secondary); }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            background: #2c2c2c;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 6px;
+            box-sizing: border-box;
         }
+        .task-item {
+            border-bottom: 1px solid #333;
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .task-info { flex: 1; }
+        .task-actions { display: flex; gap: 5px; }
+        .task-actions button { width: auto; padding: 6px 10px; font-size: 12px; margin: 0;}
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col justify-between font-sans">
+<body>
 
-    <header class="bg-gray-800 border-b border-gray-700 p-4 md:px-8 flex justify-between items-center shadow-lg">
-        <div>
-            <h1 class="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">挑戰系統</h1>
-            <p id="subTitleDisplay" class="text-xs md:text-sm text-gray-400 mt-1 italic">每一天都是新的挑戰！</p>
+<div class="container">
+
+    <div id="main-view" class="view active">
+        <h1>挑戰主頁</h1>
+        <div class="card">
+            <div class="streak-display">持續堅持：<span id="streak-count">0</span> 天</div>
         </div>
-        <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2 rounded-full shadow-md text-sm md:text-base font-bold flex items-center gap-1">
-            🔥 已堅持 <span id="streakDisplay">0</span> 天
-        </div>
-    </header>
-
-    <main class="flex-grow flex flex-col items-center justify-center p-4">
-        <div id="mainContainer" class="w-full max-w-md bg-gray-800 rounded-2xl p-6 shadow-2xl border border-gray-700 min-h-[300px] flex flex-col justify-between">
-            
-            <div id="noTaskView" class="flex-grow flex flex-col items-center justify-center gap-4 text-center">
-                <div class="text-5xl">🎯</div>
-                <h3 class="text-xl font-bold text-gray-300">今天想挑戰點什麼？</h3>
-                <p class="text-sm text-gray-500 max-w-xs">系統將根據你設定的任務庫與動態機率公式，為你抽出今日的最佳考驗！</p>
-                <button onclick="drawTask()" class="w-full mt-4 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white font-bold py-3 px-6 rounded-xl transition duration-300 shadow-lg active:scale-95 cursor-pointer">
-                    🎲 抽取今日任務
-                </button>
-            </div>
-
-            <div id="taskActiveView" class="hidden flex-grow flex flex-col justify-between">
-                <div class="flip-card w-full flex-grow flex items-center justify-center py-4">
-                    <div id="flipCardInner" class="flip-card-inner w-full bg-gray-700 rounded-xl p-6 border border-gray-600 shadow-inner flex flex-col gap-3 min-h-[200px]">
-                        <div>
-                            <span id="taskTypeBadge" class="text-xs px-2. py-1 rounded bg-blue-900 text-blue-200 font-semibold">常規型</span>
-                            <h2 id="taskNameDisplay" class="text-2xl font-black text-white mt-2">任務名稱</h2>
-                        </div>
-                        <hr class="border-gray-600">
-                        <p id="taskContentDisplay" class="text-gray-300 text-base flex-grow">任務內容載入中...</p>
-                    </div>
-                </div>
-
-                <div class="flex gap-3 mt-4">
-                    <button onclick="abandonTask()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold py-3 rounded-xl transition duration-200 active:scale-95 cursor-pointer">
-                        放棄
-                    </button>
-                    <button onclick="completeTask()" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 rounded-xl transition duration-200 shadow-md active:scale-95 cursor-pointer">
-                        ✔️ 完成任務
-                    </button>
-                </div>
-            </div>
-
-        </div>
-    </main>
-
-    <footer class="p-4 flex justify-center bg-gray-900">
-        <button onclick="toggleModal(true)" class="bg-gray-800 border border-gray-700 hover:bg-gray-700 text-gray-300 text-sm font-semibold py-2.5 px-6 rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer">
-            ⚙️ 管理任務庫 & 里程碑
-        </button>
-    </footer>
-
-    <div id="mgmtModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-gray-800 w-full max-w-2xl h-[85vh] rounded-2xl border border-gray-700 flex flex-col shadow-2xl overflow-hidden">
-            
-            <div class="bg-gray-800 border-b border-gray-700 flex justify-between items-center px-4 md:px-6 py-3">
-                <div class="flex gap-2">
-                    <button id="tabTaskBtn" onclick="switchTab('task')" class="text-base font-bold px-3 py-1.5 border-b-2 border-blue-500 text-blue-400 cursor-pointer">任務管理</button>
-                    <button id="tabMileBtn" onclick="switchTab('mile')" class="text-base font-bold px-3 py-1.5 border-b-2 border-transparent text-gray-400 hover:text-gray-200 cursor-pointer">里程碑語錄</button>
-                </div>
-                <button onclick="toggleModal(false)" class="text-gray-400 hover:text-gray-200 text-2xl font-bold cursor-pointer">&times;</button>
-            </div>
-
-            <div class="flex-grow overflow-y-auto p-4 md:p-6 space-y-6">
-                
-                <div id="tabTaskSection" class="space-y-6">
-                    <form id="taskForm" onsubmit="addTask(event)" class="bg-gray-700/50 p-4 rounded-xl border border-gray-600/50 space-y-3">
-                        <h4 class="text-sm font-bold text-gray-300 border-l-4 border-blue-500 pl-2">新增任務 (決定初始權重)</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <input type="text" id="inputTaskName" placeholder="任務名稱（例：每天深蹲）" required class="bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                            <input type="number" id="inputTaskWeight" placeholder="初始權重（預設 100）" min="1" value="100" required class="bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                        </div>
-                        <div class="w-full">
-                            <select id="inputTaskType" class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                                <option value="regular">【常規型】權重永遠保持初始值</option>
-                                <option value="linear_inc">【線性遞增型】權重 = 初始值 + 堅持天數</option>
-                                <option value="exp_inc">【指數遞增型】權重 = 初始值 * (1.1^堅持天數)</option>
-                                <option value="linear_dec">【線性遞減型】權重 = 初始值 - 堅持天數 (下限 1)</option>
-                                <option value="exp_dec">【指數遞減型】權重 = 初始值 * (0.9^堅持天數) (下限 1)</option>
-                            </select>
-                        </div>
-                        <textarea id="inputTaskContent" placeholder="任務具體內容與要求..." rows="2" required class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"></textarea>
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm transition cursor-pointer">加入任務庫</button>
-                    </form>
-
-                    <div class="space-y-2">
-                        <h4 class="text-sm font-bold text-gray-300">目前任務庫清單</h4>
-<div class="bg-gray-700/40 border border-gray-600 rounded-xl p-3 my-2 flex justify-between items-center text-xs font-mono">
-    <div class="text-gray-400">總初始權重：<span id="totalBaseWeight" class="font-bold text-teal-400 text-sm">0</span></div>
-    <div class="text-gray-400">今日加權總總計：<span id="totalCurrentWeight" class="font-bold text-amber-400 text-sm">0</span></div>
-</div>
-                        <div class="overflow-x-auto rounded-lg border border-gray-700">
-                            <table class="w-full text-left text-xs bg-gray-800">
-                                <thead class="bg-gray-700 text-gray-300 uppercase">
-                                    <tr>
-                                        <th class="p-3">名稱</th>
-                                        <th class="p-3">型態</th>
-                                        <th class="p-3">初始/當前權重</th>
-                                        <th class="p-3 text-center">操作</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="taskTableBody" class="divide-y divide-gray-700">
-                                    </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="tabMileSection" class="hidden space-y-6">
-                    <form id="mileForm" onsubmit="addMilestone(event)" class="bg-gray-700/50 p-4 rounded-xl border border-gray-600/50 space-y-3">
-                        <h4 class="text-sm font-bold text-gray-300 border-l-4 border-teal-500 pl-2">設定堅持天數里程碑語錄</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                            <input type="number" id="inputMileDays" placeholder="指定天數（例：7）" min="1" required class="md:col-span-1 bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                            <input type="text" id="inputMileText" placeholder="觸發時顯示的一句話（無數句可輸入）" required class="md:col-span-3 bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                        </div>
-                        <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 rounded-lg text-sm transition cursor-pointer">儲存里程碑</button>
-                    </form>
-
-                    <div class="space-y-2">
-                        <h4 class="text-sm font-bold text-gray-300">已設定的里程碑</h4>
-                        <div class="overflow-x-auto rounded-lg border border-gray-700">
-                            <table class="w-full text-left text-xs bg-gray-800">
-                                <thead class="bg-gray-700 text-gray-300">
-                                    <tr>
-                                        <th class="p-3 w-24">達成天數</th>
-                                        <th class="p-3">解鎖語錄內容</th>
-                                        <th class="p-3 text-center w-20">操作</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="mileTableBody" class="divide-y divide-gray-700">
-                                    </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <div id="celebrationModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[60]">
-        <div class="bg-gradient-to-b from-gray-800 to-gray-900 border-2 border-amber-500 rounded-2xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
-            <div class="text-6xl animate-bounce">🎉</div>
-            <h2 class="text-2xl font-black text-amber-400">達成新里程碑！</h2>
-            <p id="celebrationDays" class="text-sm font-bold text-gray-400"></p>
-            <div class="bg-gray-700/50 p-4 rounded-xl border border-gray-600 my-2">
-                <p id="celebrationText" class="text-white font-medium text-base italic"></p>
-            </div>
-            <button onclick="closeCelebration()" class="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-2.5 rounded-xl shadow-lg transition cursor-pointer">
-                收到！繼續堅持！
-            </button>
-        </div>
-    </div>
-
-    <script>
-        // --- 初始化資料庫與狀態變數 ---
-        let appState = {
-            streak: 0,              // 目前堅持天數
-            tasks: [],              // 任務庫陣列
-            milestones: [],         // 里程碑語錄陣列
-            currentTask: null       // 今日抽中並正在執行的任務
-        };
-
-        // 任務類型中文字典對照
-        const typeMapping = {
-            regular: '常規型',
-            linear_inc: '線性遞增',
-            exp_inc: '指數遞增',
-            linear_dec: '線性遞減',
-            exp_dec: '指數遞減'
-        };
-
-        // 網頁加載時自動讀取 localStorage 本地資料 (條件 6)
-        window.onload = function() {
-            const savedState = localStorage.getItem('challenge_system_state');
-            if (savedState) {
-                appState = JSON.parse(savedState);
-            }
-            renderMainView();
-            renderSubTitle();
-            updateStreakDisplay();
-        };
-
-        // 儲存目前狀態至 localStorage (條件 6)
-        function saveToStorage() {
-            localStorage.setItem('challenge_system_state', JSON.stringify(appState));
-        }
-
-        // --- 核心演算法：計算動態權重 (條件 5) ---
-        function calculateCurrentWeight(task, streak) {
-            const base = Number(task.baseWeight);
-            const n = Number(streak);
-            let current = base;
-
-            switch(task.type) {
-                case 'linear_inc':
-                    current = base + n;
-                    break;
-                case 'exp_inc':
-                    current = base * Math.pow(1.1, n);
-                    break;
-                case 'linear_dec':
-                    current = base - n;
-                    if (current < 1) current = 1;
-                    break;
-                case 'exp_dec':
-                    current = base * Math.pow(0.9, n);
-                    if (current < 1) current = 1;
-                    break;
-                case 'regular':
-                default:
-                    current = base;
-                    break;
-            }
-            return Math.round(current * 10) / 10; // 保留一位小數
-        }
-
-        // --- 核心演算法：加權隨機抽取 (條件 3) ---
-        function drawTask() {
-            if (appState.tasks.length === 0) {
-                alert('請先打開管理後台，在任務庫中新增至少一個任務！');
-                toggleModal(true);
-                return;
-            }
-
-            // 1. 計算所有任務的實時權重與總和
-            let totalWeight = 0;
-            const tasksWithWeights = appState.tasks.map(task => {
-                const w = calculateCurrentWeight(task, appState.streak);
-                totalWeight += w;
-                return { ...task, tempWeight: w };
-            });
-
-            // 2. 隨機數滾輪
-            let randomRoll = Math.random() * totalWeight;
-            let selectedTask = null;
-
-            // 3. 遍歷加權區間
-            for (let task of tasksWithWeights) {
-                randomRoll -= task.tempWeight;
-                if (randomRoll <= 0) {
-                    selectedTask = task;
-                    break;
-                }
-            }
-
-            // 防呆與極端安全處理
-            if (!selectedTask) selectedTask = appState.tasks[0];
-
-            // 4. 更新狀態
-            appState.currentTask = selectedTask;
-            saveToStorage();
-            renderMainView();
-        }
-
-        // --- 主視覺視窗動態渲染 ---
-        function renderMainView() {
-            const noTaskView = document.getElementById('noTaskView');
-            const taskActiveView = document.getElementById('taskActiveView');
-
-            if (appState.currentTask) {
-                // 已有任務，切換至任務卡片介面
-                noTaskView.classList.add('hidden');
-                taskActiveView.classList.remove('hidden');
-
-                document.getElementById('taskTypeBadge').innerText = typeMapping[appState.currentTask.type];
-                document.getElementById('taskNameDisplay').innerText = appState.currentTask.name;
-                document.getElementById('taskContentDisplay').innerText = appState.currentTask.content;
-            } else {
-                // 尚未抽取
-                noTaskView.classList.remove('hidden');
-                taskActiveView.classList.add('hidden');
-            }
-        }
-
-        // 更新天數UI
-        function updateStreakDisplay() {
-            document.getElementById('streakDisplay').innerText = appState.streak;
-        }
-
-        // 渲染或更新符合當前天數的最新副標題 (條件 7)
-        function renderSubTitle() {
-            const subTitleDisplay = document.getElementById('subTitleDisplay');
-            // 篩選出所有小於等於目前天數的里程碑，並依天數由大到小排序，取最新生效的一筆
-            const availableMilestones = appState.milestones
-                .filter(m => Number(m.days) <= appState.streak)
-                .sort((a, b) => Number(b.days) - Number(a.days));
-
-            if (availableMilestones.length > 0) {
-                subTitleDisplay.innerText = availableMilestones[0].text;
-            } else {
-                subTitleDisplay.innerText = "每一天都是新的挑戰！";
-            }
-        }
-
-        // --- 行動與按鈕事件 ---
-        function completeTask() {
-            appState.streak += 1;
-            const newStreak = appState.streak;
-            appState.currentTask = null; // 清空今日任務
-            
-            updateStreakDisplay();
-            renderMainView();
-            saveToStorage();
-
-            // 檢查是否剛好觸發里程碑賀詞彈窗 (條件 7)
-            const matchedMilestone = appState.milestones.find(m => Number(m.days) === newStreak);
-            if (matchedMilestone) {
-                document.getElementById('celebrationDays').innerText = `🏆 第 ${newStreak} 天達成紀錄`;
-                document.getElementById('celebrationText').innerText = matchedMilestone.text;
-                document.getElementById('celebrationModal').classList.remove('hidden');
-            }
-
-            renderSubTitle();
-        }
-
-        function closeCelebration() {
-            document.getElementById('celebrationModal').classList.add('hidden');
-        }
-
-        function abandonTask() {
-            if (confirm('確定要放棄今日抽到的任務嗎？將會重新回到抽取介面。')) {
-                appState.currentTask = null;
-                saveToStorage();
-                renderMainView();
-            }
-        }
-
-        // --- 後台管理彈窗邏輯 (條件 3) ---
-        function toggleModal(show) {
-            const modal = document.getElementById('mgmtModal');
-            if (show) {
-                modal.classList.remove('hidden');
-                renderTaskTable();
-                renderMilestoneTable();
-            } else {
-                modal.classList.add('hidden');
-            }
-        }
-
-        function switchTab(tab) {
-            const taskBtn = document.getElementById('tabTaskBtn');
-            const mileBtn = document.getElementById('tabMileBtn');
-            const taskSection = document.getElementById('tabTaskSection');
-            const mileSection = document.getElementById('tabMileSection');
-
-            if (tab === 'task') {
-                taskBtn.className = "text-base font-bold px-3 py-1.5 border-b-2 border-blue-500 text-blue-400 cursor-pointer";
-                mileBtn.className = "text-base font-bold px-3 py-1.5 border-b-2 border-transparent text-gray-400 hover:text-gray-200 cursor-pointer";
-                taskSection.classList.remove('hidden');
-                mileSection.classList.add('hidden');
-            } else {
-                mileBtn.className = "text-base font-bold px-3 py-1.5 border-b-2 border-teal-500 text-teal-400 cursor-pointer";
-                taskBtn.className = "text-base font-bold px-3 py-1.5 border-b-2 border-transparent text-gray-400 hover:text-gray-200 cursor-pointer";
-                mileSection.classList.remove('hidden');
-                taskSection.classList.add('hidden');
-            }
-        }
-
-        // --- 任務庫資料操作表單與表格渲染 ---
-        function addTask(e) {
-            e.preventDefault();
-            const name = document.getElementById('inputTaskName').value.trim();
-            const baseWeight = document.getElementById('inputTaskWeight').value;
-            const type = document.getElementById('inputTaskType').value;
-            const content = document.getElementById('inputTaskContent').value.trim();
-
-            const newTask = {
-                id: 'task_' + Date.now(),
-                name,
-                baseWeight: Number(baseWeight),
-                type,
-                content
-            };
-
-            appState.tasks.push(newTask);
-            saveToStorage();
-            renderTaskTable();
-            document.getElementById('taskForm').reset();
-            document.getElementById('inputTaskWeight').value = 100; // 恢復預設
-        }
-
-        function deleteTask(id) {
-            appState.tasks = appState.tasks.filter(t => t.id !== id);
-            // 如果刪除的剛好是正在執行的任務，同步清空
-            if (appState.currentTask && appState.currentTask.id === id) {
-                appState.currentTask = null;
-                renderMainView();
-            }
-            saveToStorage();
-            renderTaskTable();
-        }
-
-        function renderTaskTable() {
-    const tbody = document.getElementById('taskTableBody');
-    tbody.innerHTML = '';
-
-    // 🔥 新增：初始化總權數暫存變數
-    let totalBase = 0;
-    let totalCurrent = 0;
-
-    if (appState.tasks.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">目前任務庫空空如也...</td></tr>`;
-        // 🔥 新增：沒任務時歸零
-        if(document.getElementById('totalBaseWeight')) {
-            document.getElementById('totalBaseWeight').innerText = 0;
-            document.getElementById('totalCurrentWeight').innerText = 0;
-        }
-        return;
-    }
-
-    appState.tasks.forEach(task => {
-        const curW = calculateCurrentWeight(task, appState.streak);
         
-        // 🔥 新增：遍歷時順便累加初始與當前權重
-        totalBase += Number(task.baseWeight);
-        totalCurrent += curW;
+        <div class="card">
+            <h3>目前抽到的任務</h3>
+            <div id="drawn-task-container" style="text-align: center; min-height: 60px; font-size: 18px; font-weight: bold;">
+                尚未抽取任務
+            </div>
+            <div id="drawn-task-detail" style="text-align: center; color: var(--text-secondary); font-size: 14px; margin-top: 5px;"></div>
+        </div>
 
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-700/40 transition";
-        tr.innerHTML = `
-            <td class="p-3">
-                <div class="font-bold text-gray-200">${task.name}</div>
-                <div class="text-[10px] text-gray-400 max-w-[150px] truncate">${task.content}</div>
-            </td>
-            <td class="p-3 text-gray-300">${typeMapping[task.type]}</td>
-            <td class="p-3 font-mono text-teal-400">${task.baseWeight} &rarr; <span class="font-bold text-amber-400">${curW}</span></td>
-            <td class="p-3 text-center">
-                <button onclick="deleteTask('${task.id}')" class="bg-red-900/60 hover:bg-red-800 text-red-200 px-2 py-1 rounded transition text-[11px] cursor-pointer">刪除</button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
+        <button id="btn-draw" onclick="drawTask()">🎲 抽取任務</button>
+        <button class="secondary" onclick="switchView('pool-view')">📂 進入任務庫</button>
+        <button class="secondary" onclick="nextDay()">☀️ 過了一天 (模擬堅持)</button>
+        <button class="danger" onclick="failChallenge()">💥 宣告挑戰失敗</button>
+    </div>
 
-    // 🔥 新增：把累加後的總權數更新至剛才新增的小視窗中
-    if(document.getElementById('totalBaseWeight')) {
-        document.getElementById('totalBaseWeight').innerText = totalBase;
-        document.getElementById('totalCurrentWeight').innerText = Math.round(totalCurrent * 10) / 10;
+    <div id="pool-view" class="view">
+        <h1>任務庫管理</h1>
+        <button class="secondary" onclick="switchView('main-view')">⬅️ 返回主頁</button>
+        
+        <div class="card" style="margin-top: 15px;">
+            <h3 id="form-title">添加新任務</h3>
+            <input type="hidden" id="task-id">
+            <div class="form-group">
+                <label>任務名稱</label>
+                <input type="text" id="task-name" placeholder="例如：跑步 3 公里">
+            </div>
+            <div class="form-group">
+                <label>初始權重 (數字，越高越容易被抽到)</label>
+                <input type="number" id="task-init-weight" value="10">
+            </div>
+            <div class="form-group">
+                <label>任務加權模式</label>
+                <select id="task-weight-mode">
+                    <option value="constant">恆等於初始權重</option>
+                    <option value="linear_add">等於初始權重 + 堅持天數</option>
+                    <option value="exp_add">等於初始權重 * 1.2 的堅持天數次方</option>
+                    <option value="linear_sub">等於初始權重 - 堅持天數</option>
+                    <option value="exp_sub">等於初始權重 / (1.2 的堅持天數次方)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>任務重置加權條件</label>
+                <select id="task-reset-condition" onchange="toggleResetParam()">
+                    <option value="none">不重置</option>
+                    <option value="draw_n">抽到 n 次時重置</option>
+                </select>
+            </div>
+            <div class="form-group" id="reset-param-group" style="display: none;">
+                <label>次數 n</label>
+                <input type="number" id="task-reset-param" value="3">
+            </div>
+            <div class="form-group">
+                <label>任務詳細內容</label>
+                <textarea id="task-content" rows="3" placeholder="請輸入詳細內容..."></textarea>
+            </div>
+            <button id="btn-save-task" onclick="saveTask()">💾 儲存任務</button>
+            <button id="btn-cancel-edit" class="secondary" style="display:none;" onclick="resetForm()">取消編輯</button>
+        </div>
+
+        <div class="card">
+            <h3>目前任務列表</h3>
+            <div id="task-list"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // 遊戲狀態資料結構
+    let state = {
+        streak: 0,
+        currentTask: null,
+        tasks: []
+    };
+
+    // 初始化讀取 LocalStorage
+    function init() {
+        const savedState = localStorage.getItem('challenge_state');
+        if (savedState) {
+            state = JSON.parse(savedState);
+        }
+        renderMain();
+        renderPool();
     }
-}
 
-        // --- 里程碑語錄資料操作表單與表格渲染 ---
-        function addMilestone(e) {
-            e.preventDefault();
-            const days = document.getElementById('inputMileDays').value;
-            const text = document.getElementById('inputMileText').value.trim();
+    function saveState() {
+        localStorage.setItem('challenge_state', JSON.stringify(state));
+    }
 
-            // 檢查是否重複設定天數，若重複則覆蓋
-            appState.milestones = appState.milestones.filter(m => Number(m.days) !== Number(days));
+    function switchView(viewId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        if(viewId === 'pool-view') renderPool();
+        if(viewId === 'main-view') renderMain();
+    }
 
-            appState.milestones.push({
-                days: Number(days),
-                text: text
-            });
+    function toggleResetParam() {
+        const cond = document.getElementById('task-reset-condition').value;
+        document.getElementById('reset-param-group').style.display = (cond === 'draw_n') ? 'block' : 'none';
+    }
 
-            // 排序里程碑（依天數從小到大）
-            appState.milestones.sort((a, b) => a.days - b.days);
+    // 核心邏輯 1：動態計算某條任務當前的權重
+    function calculateCurrentWeight(task) {
+        let d = task.taskStreak || 0; // 該任務獨立計算的堅持天數
+        let w0 = parseFloat(task.initWeight) || 1;
+        let w = w0;
 
-            saveToStorage();
-            renderMilestoneTable();
-            renderSubTitle();
-            document.getElementById('mileForm').reset();
+        switch(task.weightMode) {
+            case 'linear_add': w = w0 + d; break;
+            case 'exp_add': w = w0 * Math.pow(1.2, d); break;
+            case 'linear_sub': w = w0 - d; break;
+            case 'exp_sub': w = w0 / Math.pow(1.2, d); break;
+            default: w = w0; // constant
+        }
+        return Math.max(0, w); // 權重不為負數
+    }
+
+    // 核心邏輯 2：加權隨機抽取演算法
+    function drawTask() {
+        if (state.tasks.length === 0) {
+            alert("任務庫空空如也，請先去任務庫添加任務！");
+            return;
         }
 
-        function deleteMilestone(days) {
-            appState.milestones = appState.milestones.filter(m => Number(m.days) !== Number(days));
-            saveToStorage();
-            renderMilestoneTable();
-            renderSubTitle();
+        // 計算總權重
+        let totalWeight = 0;
+        let activeTasks = state.tasks.map(t => {
+            let w = calculateCurrentWeight(t);
+            totalWeight += w;
+            return { task: t, currentWeight: w };
+        });
+
+        if (totalWeight <= 0) {
+            alert("所有任務當前權重皆為 0，無法抽取！");
+            return;
         }
 
-        function renderMilestoneTable() {
-            const tbody = document.getElementById('mileTableBody');
-            tbody.innerHTML = '';
+        // 隨機落點
+        let randomNum = Math.random() * totalWeight;
+        let sum = 0;
+        let selected = null;
 
-            if (appState.milestones.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-500">目前尚未設定任何天數里程碑。</td></tr>`;
-                return;
+        for (let item of activeTasks) {
+            sum += item.currentWeight;
+            if (randomNum <= sum) {
+                selected = item.task;
+                break;
             }
-
-            appState.milestones.forEach(m => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-700/40 transition";
-                tr.innerHTML = `
-                    <td class="p-3 font-mono font-bold text-amber-400 text-center">${m.days} 天</td>
-                    <td class="p-3 text-gray-200">${m.text}</td>
-                    <td class="p-3 text-center">
-                        <button onclick="deleteMilestone(${m.days})" class="bg-red-900/60 hover:bg-red-800 text-red-200 px-2 py-1 rounded transition text-[11px] cursor-pointer">刪除</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
         }
-    </script>
+
+        if (selected) {
+            // 更新抽取數據
+            selected.drawCount = (selected.drawCount || 0) + 1;
+            state.currentTask = { name: selected.name, content: selected.content };
+
+            // 檢查是否觸發「重置加權條件」
+            if (selected.resetCondition === 'draw_n' && selected.drawCount >= parseInt(selected.resetParam)) {
+                selected.taskStreak = 0; // 重置該任務的獨立堅持天數
+                selected.drawCount = 0;  // 重置抽取次數計數
+            }
+            
+            saveState();
+            renderMain();
+        }
+    }
+
+    // 核心邏輯 3：過了一天（增加堅持天數）
+    function nextDay() {
+        state.streak++;
+        // 每一條任務的獨立堅持天數也 +1
+        state.tasks.forEach(t => {
+            t.taskStreak = (t.taskStreak || 0) + 1;
+        });
+        saveState();
+        renderMain();
+    }
+
+    // 核心邏輯 4：挑戰失敗重置
+    function failChallenge() {
+        if(confirm("確定宣告挑戰失敗嗎？這會將天數與任務加權歸零喔！")) {
+            state.streak = 0;
+            state.currentTask = null;
+            // 任務庫不刪除，但所有任務的加權數據歸零（獨立天數與抽取次數歸零）
+            state.tasks.forEach(t => {
+                t.taskStreak = 0;
+                t.drawCount = 0;
+            });
+            saveState();
+            renderMain();
+            alert("挑戰已重置，加油！重新開始！");
+        }
+    }
+
+    // 主頁畫面渲染
+    function renderMain() {
+        document.getElementById('streak-count').innerText = state.streak;
+        const container = document.getElementById('drawn-task-container');
+        const detail = document.getElementById('drawn-task-detail');
+        
+        if (state.currentTask) {
+            container.innerText = state.currentTask.name;
+            detail.innerText = state.currentTask.content || "無詳細內容";
+        } else {
+            container.innerText = "尚未抽取任務";
+            detail.innerText = "";
+        }
+    }
+
+    // 任務庫畫面渲染 (CRUD)
+    function renderPool() {
+        const listContainer = document.getElementById('task-list');
+        listContainer.innerHTML = '';
+
+        state.tasks.forEach((t, index) => {
+            let curW = calculateCurrentWeight(t).toFixed(1);
+            let item = document.createElement('div');
+            item.className = 'task-item';
+            item.innerHTML = `
+                <div class="task-info">
+                    <strong>${t.name}</strong> <span style="font-size:12px; color:var(--primary);">[當前權重: ${curW}]</span><br>
+                    <small style="color:var(--text-secondary)">初始: ${t.initWeight} | 模式: ${t.weightMode} | 獨立天數: ${t.taskStreak || 0} | 已抽: ${t.drawCount || 0}次</small>
+                </div>
+                <div class="task-actions">
+                    <button class="secondary" onclick="editTask('${t.id}')">✏️</button>
+                    <button class="danger" onclick="deleteTask('${t.id}')">🗑️</button>
+                </div>
+            `;
+            listContainer.appendChild(item);
+        });
+    }
+
+    // 儲存任務 (包含新增與修改)
+    function saveTask() {
+        const id = document.getElementById('task-id').value;
+        const name = document.getElementById('task-name').value.trim();
+        const initWeight = parseFloat(document.getElementById('task-init-weight').value) || 10;
+        const weightMode = document.getElementById('task-weight-mode').value;
+        const resetCondition = document.getElementById('task-reset-condition').value;
+        const resetParam = document.getElementById('task-reset-param').value;
+        const content = document.getElementById('task-content').value.trim();
+
+        if (!name) {
+            alert("請輸入任務名稱！");
+            return;
+        }
+
+        if (id) {
+            // 編輯模式
+            let task = state.tasks.find(t => t.id === id);
+            if (task) {
+                task.name = name;
+                task.initWeight = initWeight;
+                task.weightMode = weightMode;
+                task.resetCondition = resetCondition;
+                task.resetParam = resetParam;
+                task.content = content;
+            }
+        } else {
+            // 新增模式
+            let newTask = {
+                id: Date.now().toString(),
+                name: name,
+                initWeight: initWeight,
+                weightMode: weightMode,
+                resetCondition: resetCondition,
+                resetParam: resetParam,
+                content: content,
+                taskStreak: 0, // 初始獨立天數為 0
+                drawCount: 0   // 初始被抽到次數為 0
+            };
+            state.tasks.push(newTask);
+        }
+
+        saveState();
+        resetForm();
+        renderPool();
+    }
+
+    function editTask(id) {
+        let task = state.tasks.find(t => t.id === id);
+        if (!task) return;
+
+        document.getElementById('task-id').value = task.id;
+        document.getElementById('task-name').value = task.name;
+        document.getElementById('task-init-weight').value = task.initWeight;
+        document.getElementById('task-weight-mode').value = task.weightMode;
+        document.getElementById('task-reset-condition').value = task.resetCondition;
+        document.getElementById('task-reset-param').value = task.resetParam || 3;
+        document.getElementById('task-content').value = task.content;
+
+        toggleResetParam();
+        document.getElementById('form-title').innerText = "編輯任務";
+        document.getElementById('btn-cancel-edit').style.display = "block";
+    }
+
+    function deleteTask(id) {
+        if(confirm("確定要刪除這個任務嗎？")) {
+            state.tasks = state.tasks.filter(t => t.id !== id);
+            saveState();
+            renderPool();
+        }
+    }
+
+    function resetForm() {
+        document.getElementById('task-id').value = '';
+        document.getElementById('task-name').value = '';
+        document.getElementById('task-init-weight').value = '10';
+        document.getElementById('task-weight-mode').value = 'constant';
+        document.getElementById('task-reset-condition').value = 'none';
+        document.getElementById('task-reset-param').value = '3';
+        document.getElementById('task-content').value = '';
+        
+        toggleResetParam();
+        document.getElementById('form-title').innerText = "添加新任務";
+        document.getElementById('btn-cancel-edit').style.display = "none";
+    }
+
+    // 啟動載入
+    window.onload = init;
+</script>
 </body>
 </html>
