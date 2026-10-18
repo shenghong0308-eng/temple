@@ -1,404 +1,390 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>長期挑戰任務系統</title>
-    <style>
-        :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --primary: #bb86fc;
-            --text: #ffffff;
-            --text-secondary: #aaaaaa;
-            --danger: #cf6679;
-            --success: #03dac6;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text);
-            margin: 0;
-            padding: 15px;
-            box-sizing: border-box;
-        }
-        .container { max-width: 500px; margin: 0 auto; }
-        .view { display: none; }
-        .view.active { display: block; }
-        h1, h2, h3 { text-align: center; color: var(--primary); }
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-        .streak-display { font-size: 24px; text-align: center; font-weight: bold; color: var(--success); }
-        button {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary);
-            color: #000;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            margin-top: 10px;
-            cursor: pointer;
-        }
-        button.secondary { background: #333; color: var(--text); }
-        button.danger { background: var(--danger); color: #000; }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; margin-bottom: 4px; color: var(--text-secondary); }
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            background: #2c2c2c;
-            border: 1px solid #444;
-            color: #fff;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-        .task-item {
-            border-bottom: 1px solid #333;
-            padding: 10px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .task-info { flex: 1; }
-        .task-actions { display: flex; gap: 5px; }
-        .task-actions button { width: auto; padding: 6px 10px; font-size: 12px; margin: 0;}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>長期禁慾挑戰</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0a;
+    color: #eee;
+    font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    user-select: none;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: background-image 0.8s;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.78);
+    z-index: -1;
+    pointer-events: none;
+  }
+  .screen {
+    width: 100%;
+    max-width: 480px;
+    padding: 24px 20px;
+    position: relative;
+    z-index: 1;
+  }
+  h1 { font-size: 1.7rem; color: #ff4d6d; margin-bottom: 16px; }
+  p { line-height: 1.65; margin-bottom: 14px; font-size: 1.05rem; }
+  input[type="number"] {
+    width: 80px;
+    padding: 8px;
+    font-size: 1.1rem;
+    text-align: center;
+    border-radius: 8px;
+    border: 1px solid #555;
+    background: #1a1a1a;
+    color: #fff;
+    margin: 0 6px;
+  }
+  .upload-area {
+    margin: 18px 0;
+    padding: 14px;
+    border: 1px dashed #666;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+  }
+  .upload-area label { display: block; margin-bottom: 8px; color: #ccc; }
+  input[type="file"] { color: #ddd; width: 100%; }
+  button {
+    background: #ff4d6d;
+    color: white;
+    border: none;
+    padding: 14px 36px;
+    font-size: 1.15rem;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: 0.2s;
+  }
+  button:active { transform: scale(0.96); }
+  button.secondary {
+    background: #333;
+    border: 1px solid #ff4d6d;
+    color: #ffb3c1;
+  }
+  #day-display {
+    font-size: 2.8rem;
+    font-weight: bold;
+    color: #ff4d6d;
+    margin: 12px 0 20px;
+  }
+  #message {
+    font-size: 1.35rem;
+    min-height: 3em;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  #countdown {
+    font-size: 5.5rem;
+    font-weight: bold;
+    color: #ff4d6d;
+    text-shadow: 0 0 25px #ff4d6d;
+    margin: 20px 0;
+    display: none;
+  }
+  #status {
+    font-size: 0.95rem;
+    color: #aaa;
+    margin-top: 18px;
+  }
+  .hidden { display: none !important; }
+  .success { color: #7CFC00; }
+  .fail { color: #ff6b6b; }
+</style>
 </head>
 <body>
 
-<div class="container">
+<!-- 開始設定畫面 -->
+<div id="setup-screen" class="screen">
+  <h1>長期禁慾挑戰</h1>
+  <p>設定你願意挑戰的天數區間。<br>
+  系統會在這個區間內隨機抽出一個「秘密射精日」，你看不到這個數字。<br>
+  每天由你自己點「下一天」推進。</p>
 
-    <div id="main-view" class="view active">
-        <h1>挑戰主頁</h1>
-        <div class="card">
-            <div class="streak-display">持續堅持：<span id="streak-count">0</span> 天</div>
-        </div>
-        
-        <div class="card">
-            <h3>目前抽到的任務</h3>
-            <div id="drawn-task-container" style="text-align: center; min-height: 60px; font-size: 18px; font-weight: bold;">
-                尚未抽取任務
-            </div>
-            <div id="drawn-task-detail" style="text-align: center; color: var(--text-secondary); font-size: 14px; margin-top: 5px;"></div>
-        </div>
+  <div style="margin: 20px 0;">
+    從 <input type="number" id="min-days" value="10" min="3" max="60"> 天
+    到 <input type="number" id="max-days" value="20" min="5" max="90"> 天
+  </div>
 
-        <button id="btn-draw" onclick="drawTask()">🎲 抽取任務</button>
-        <button class="secondary" onclick="switchView('pool-view')">📂 進入任務庫</button>
-        <button class="secondary" onclick="nextDay()">☀️ 過了一天 (模擬堅持)</button>
-        <button class="danger" onclick="failChallenge()">💥 宣告挑戰失敗</button>
-    </div>
+  <div class="upload-area">
+    <label>可選：上傳 1～多張照片（射精日或假射精日時會作為背景）</label>
+    <input type="file" id="photo-upload" accept="image/*" multiple>
+  </div>
 
-    <div id="pool-view" class="view">
-        <h1>任務庫管理</h1>
-        <button class="secondary" onclick="switchView('main-view')">⬅️ 返回主頁</button>
-        
-        <div class="card" style="margin-top: 15px;">
-            <h3 id="form-title">添加新任務</h3>
-            <input type="hidden" id="task-id">
-            <div class="form-group">
-                <label>任務名稱</label>
-                <input type="text" id="task-name" placeholder="例如：跑步 3 公里">
-            </div>
-            <div class="form-group">
-                <label>初始權重 (數字，越高越容易被抽到)</label>
-                <input type="number" id="task-init-weight" value="10">
-            </div>
-            <div class="form-group">
-                <label>任務加權模式</label>
-                <select id="task-weight-mode">
-                    <option value="constant">恆等於初始權重</option>
-                    <option value="linear_add">等於初始權重 + 堅持天數</option>
-                    <option value="exp_add">等於初始權重 * 1.2 的堅持天數次方</option>
-                    <option value="linear_sub">等於初始權重 - 堅持天數</option>
-                    <option value="exp_sub">等於初始權重 / (1.2 的堅持天數次方)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>任務重置加權條件</label>
-                <select id="task-reset-condition" onchange="toggleResetParam()">
-                    <option value="none">不重置</option>
-                    <option value="draw_n">抽到 n 次時重置</option>
-                </select>
-            </div>
-            <div class="form-group" id="reset-param-group" style="display: none;">
-                <label>次數 n</label>
-                <input type="number" id="task-reset-param" value="3">
-            </div>
-            <div class="form-group">
-                <label>任務詳細內容</label>
-                <textarea id="task-content" rows="3" placeholder="請輸入詳細內容..."></textarea>
-            </div>
-            <button id="btn-save-task" onclick="saveTask()">💾 儲存任務</button>
-            <button id="btn-cancel-edit" class="secondary" style="display:none;" onclick="resetForm()">取消編輯</button>
-        </div>
+  <button id="start-btn">開始挑戰</button>
+</div>
 
-        <div class="card">
-            <h3>目前任務列表</h3>
-            <div id="task-list"></div>
-        </div>
-    </div>
+<!-- 日常畫面 -->
+<div id="day-screen" class="screen hidden">
+  <div id="day-display">第 1 天</div>
+  <div id="message">今天不准射精</div>
+  <button id="next-day-btn" class="secondary">下一天</button>
+  <div id="status"></div>
+</div>
 
+<!-- 射精日 / 假射精日 倒數畫面 -->
+<div id="orgasm-screen" class="screen hidden">
+  <div id="orgasm-title" style="font-size:1.5rem; margin-bottom:12px;"></div>
+  <div id="countdown">100</div>
+  <div id="orgasm-message" style="font-size:1.2rem; min-height:2.5em;"></div>
+  <button id="start-countdown-btn">開始倒數</button>
+  <button id="finish-btn" class="hidden">我射了 / 沒射到</button>
+</div>
+
+<!-- 結束畫面 -->
+<div id="end-screen" class="screen hidden">
+  <h1 id="end-title"></h1>
+  <p id="end-desc"></p>
+  <button onclick="location.reload()">重新開始</button>
 </div>
 
 <script>
-    // 遊戲狀態資料結構
-    let state = {
-        streak: 0,
-        currentTask: null,
-        tasks: []
-    };
+  // ===================== 狀態 =====================
+  let minDays = 10;
+  let maxDays = 20;
+  let secretDay = 0;          // 真正的射精日
+  let currentDay = 1;
+  let fakeDays = [];          // 本局會出現的假射精日（最多2個）
+  let photos = [];            // 使用者上傳的照片 (objectURL)
+  let isFakeToday = false;
+  let teaseProb = 0.8;        // 戲弄機率
+  let countdownInterval = null;
+  let remaining = 100;
 
-    // 初始化讀取 LocalStorage
-    function init() {
-        const savedState = localStorage.getItem('challenge_state');
-        if (savedState) {
-            state = JSON.parse(savedState);
+  // ===================== DOM =====================
+  const setupScreen = document.getElementById('setup-screen');
+  const dayScreen = document.getElementById('day-screen');
+  const orgasmScreen = document.getElementById('orgasm-screen');
+  const endScreen = document.getElementById('end-screen');
+  const dayDisplay = document.getElementById('day-display');
+  const message = document.getElementById('message');
+  const status = document.getElementById('status');
+  const countdownEl = document.getElementById('countdown');
+  const orgasmTitle = document.getElementById('orgasm-title');
+  const orgasmMessage = document.getElementById('orgasm-message');
+  const startCountdownBtn = document.getElementById('start-countdown-btn');
+  const finishBtn = document.getElementById('finish-btn');
+
+  // ===================== 初始化 =====================
+  document.getElementById('photo-upload').addEventListener('change', (e) => {
+    photos = [];
+    Array.from(e.target.files).forEach(file => {
+      photos.push(URL.createObjectURL(file));
+    });
+  });
+
+  document.getElementById('start-btn').addEventListener('click', startChallenge);
+  document.getElementById('next-day-btn').addEventListener('click', nextDay);
+  startCountdownBtn.addEventListener('click', startCountdown);
+  finishBtn.addEventListener('click', askResult);
+
+  // ===================== 開始挑戰 =====================
+  function startChallenge() {
+    minDays = parseInt(document.getElementById('min-days').value) || 10;
+    maxDays = parseInt(document.getElementById('max-days').value) || 20;
+    if (minDays > maxDays) [minDays, maxDays] = [maxDays, minDays];
+    if (minDays < 3) minDays = 3;
+
+    // 隨機真正射精日
+    secretDay = Math.floor(Math.random() * (maxDays - minDays + 1)) + minDays;
+
+    // 決定 0～2 個假射精日（只能出現在 minDays 以上，且小於 secretDay）
+    fakeDays = [];
+    const possibleFakes = [];
+    for (let d = minDays; d < secretDay; d++) possibleFakes.push(d);
+    const fakeCount = Math.min(2, possibleFakes.length, Math.floor(Math.random() * 3)); // 0~2
+    for (let i = 0; i < fakeCount; i++) {
+      if (possibleFakes.length === 0) break;
+      const idx = Math.floor(Math.random() * possibleFakes.length);
+      fakeDays.push(possibleFakes.splice(idx, 1)[0]);
+    }
+
+    currentDay = 1;
+    setupScreen.classList.add('hidden');
+    dayScreen.classList.remove('hidden');
+    updateDayView();
+  }
+
+  // ===================== 更新每日畫面 =====================
+  function updateDayView() {
+    dayDisplay.textContent = `第 ${currentDay} 天`;
+    isFakeToday = fakeDays.includes(currentDay);
+
+    // 清除背景
+    document.body.style.backgroundImage = '';
+
+    if (currentDay === secretDay) {
+      // 真正射精日
+      message.innerHTML = `<span class="success">恭喜你堅持到了這天</span><br>準備好射精了嗎？`;
+      document.getElementById('next-day-btn').classList.add('hidden');
+      // 顯示開始按鈕（透過切換畫面）
+      setTimeout(() => {
+        dayScreen.classList.add('hidden');
+        showOrgasmScreen(false); // false = 真實
+      }, 1500);
+    } else if (isFakeToday) {
+      // 假射精日
+      message.innerHTML = `<span class="success">恭喜你堅持到了這天</span><br>準備好射精了嗎？`;
+      document.getElementById('next-day-btn').classList.add('hidden');
+      setTimeout(() => {
+        dayScreen.classList.add('hidden');
+        showOrgasmScreen(true); // true = 假的
+      }, 1500);
+    } else {
+      // 普通禁止日
+      message.textContent = '今天不准射精';
+      document.getElementById('next-day-btn').classList.remove('hidden');
+    }
+
+    status.textContent = `已堅持 ${currentDay} 天`;
+  }
+
+  // ===================== 下一天 =====================
+  function nextDay() {
+    currentDay++;
+    updateDayView();
+  }
+
+  // ===================== 顯示射精/假射精畫面 =====================
+  function showOrgasmScreen(isFake) {
+    isFakeToday = isFake;
+    orgasmScreen.classList.remove('hidden');
+    countdownEl.style.display = 'none';
+    startCountdownBtn.classList.remove('hidden');
+    finishBtn.classList.add('hidden');
+    remaining = 100;
+    teaseProb = 0.8;
+
+    // 設定背景
+    if (photos.length > 0) {
+      const randomPhoto = photos[Math.floor(Math.random() * photos.length)];
+      document.body.style.backgroundImage = `url(${randomPhoto})`;
+    }
+
+    if (isFake) {
+      orgasmTitle.textContent = '恭喜你堅持到了這天';
+      orgasmMessage.textContent = '按下開始後將進入 100 秒倒數，結束後請在 5 秒內射精';
+    } else {
+      orgasmTitle.textContent = '真正的射精日到了';
+      orgasmMessage.textContent = '按下開始後將進入 100 秒倒數，結束後請在 5 秒內射精';
+    }
+  }
+
+  // ===================== 開始 100 秒倒數 =====================
+  function startCountdown() {
+    startCountdownBtn.classList.add('hidden');
+    countdownEl.style.display = 'block';
+    countdownEl.textContent = remaining;
+    orgasmMessage.textContent = '跟著倒數…準備射精';
+
+    countdownInterval = setInterval(() => {
+      // 戲弄機制：剩餘 ≤3 秒時有機率加 20 秒
+      if (remaining <= 3 && remaining > 0 && Math.random() < teaseProb) {
+        remaining += 20;
+        teaseProb *= 0.8; // 機率乘上 0.8
+        orgasmMessage.textContent = '戲弄你的！再加 20 秒！';
+        countdownEl.style.color = '#ffaa00';
+        setTimeout(() => countdownEl.style.color = '#ff4d6d', 800);
+      } else {
+        remaining--;
+      }
+
+      countdownEl.textContent = remaining;
+
+      if (remaining <= 0) {
+        clearInterval(countdownInterval);
+        onCountdownEnd();
+      }
+    }, 1000);
+  }
+
+  // ===================== 倒數結束 =====================
+  function onCountdownEnd() {
+    if (isFakeToday) {
+      // 假射精日
+      countdownEl.style.display = 'none';
+      orgasmTitle.textContent = '';
+      orgasmMessage.innerHTML = `<span class="fail" style="font-size:1.6rem;">其實今天不能射喔</span><br><br>繼續忍耐吧`;
+      setTimeout(() => {
+        orgasmScreen.classList.add('hidden');
+        dayScreen.classList.remove('hidden');
+        document.body.style.backgroundImage = '';
+        // 把假日標記移除，避免重複
+        fakeDays = fakeDays.filter(d => d !== currentDay);
+        document.getElementById('next-day-btn').classList.remove('hidden');
+        message.textContent = '今天不准射精（剛剛是假的）';
+      }, 3500);
+    } else {
+      // 真正射精日 → 給 5 秒射精窗口
+      countdownEl.textContent = '射！';
+      countdownEl.style.color = '#ff0000';
+      orgasmMessage.textContent = '請在 5 秒內射出來！';
+      
+      let windowTime = 5;
+      const windowInt = setInterval(() => {
+        windowTime--;
+        if (windowTime <= 0) {
+          clearInterval(windowInt);
+          orgasmMessage.textContent = '時間到。你射到了嗎？';
+          finishBtn.classList.remove('hidden');
+          finishBtn.textContent = '我成功射精了';
+          // 再加一個失敗按鈕
+          const failBtn = document.createElement('button');
+          failBtn.textContent = '我沒射到 / 失敗了';
+          failBtn.className = 'secondary';
+          failBtn.style.marginLeft = '12px';
+          failBtn.onclick = () => failOrgasm();
+          finishBtn.parentNode.appendChild(failBtn);
         }
-        renderMain();
-        renderPool();
+      }, 1000);
+    }
+  }
+
+  // ===================== 成功 / 失敗 =====================
+  function askResult() {
+    // 成功
+    orgasmScreen.classList.add('hidden');
+    endScreen.classList.remove('hidden');
+    document.getElementById('end-title').textContent = '挑戰成功！';
+    document.getElementById('end-title').className = 'success';
+    document.getElementById('end-desc').textContent = `你總共堅持了 ${currentDay} 天，並成功在射精日射精。恭喜你完成挑戰。`;
+  }
+
+  function failOrgasm() {
+    // 失敗 → 從第一天重新開始
+    alert('射精失敗…挑戰將從第 1 天重新開始。');
+    currentDay = 1;
+    // 重新抽秘密日與假日（可選擇保留原本或重抽，這裡選擇重抽增加變化）
+    secretDay = Math.floor(Math.random() * (maxDays - minDays + 1)) + minDays;
+    fakeDays = [];
+    const possibleFakes = [];
+    for (let d = minDays; d < secretDay; d++) possibleFakes.push(d);
+    const fakeCount = Math.min(2, possibleFakes.length, Math.floor(Math.random() * 3));
+    for (let i = 0; i < fakeCount; i++) {
+      if (possibleFakes.length === 0) break;
+      const idx = Math.floor(Math.random() * possibleFakes.length);
+      fakeDays.push(possibleFakes.splice(idx, 1)[0]);
     }
 
-    function saveState() {
-        localStorage.setItem('challenge_state', JSON.stringify(state));
-    }
-
-    function switchView(viewId) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.getElementById(viewId).classList.add('active');
-        if(viewId === 'pool-view') renderPool();
-        if(viewId === 'main-view') renderMain();
-    }
-
-    function toggleResetParam() {
-        const cond = document.getElementById('task-reset-condition').value;
-        document.getElementById('reset-param-group').style.display = (cond === 'draw_n') ? 'block' : 'none';
-    }
-
-    // 核心邏輯 1：動態計算某條任務當前的權重
-    function calculateCurrentWeight(task) {
-        let d = task.taskStreak || 0; // 該任務獨立計算的堅持天數
-        let w0 = parseFloat(task.initWeight) || 1;
-        let w = w0;
-
-        switch(task.weightMode) {
-            case 'linear_add': w = w0 + d; break;
-            case 'exp_add': w = w0 * Math.pow(1.2, d); break;
-            case 'linear_sub': w = w0 - d; break;
-            case 'exp_sub': w = w0 / Math.pow(1.2, d); break;
-            default: w = w0; // constant
-        }
-        return Math.max(0, w); // 權重不為負數
-    }
-
-    // 核心邏輯 2：加權隨機抽取演算法
-    function drawTask() {
-        if (state.tasks.length === 0) {
-            alert("任務庫空空如也，請先去任務庫添加任務！");
-            return;
-        }
-
-        // 計算總權重
-        let totalWeight = 0;
-        let activeTasks = state.tasks.map(t => {
-            let w = calculateCurrentWeight(t);
-            totalWeight += w;
-            return { task: t, currentWeight: w };
-        });
-
-        if (totalWeight <= 0) {
-            alert("所有任務當前權重皆為 0，無法抽取！");
-            return;
-        }
-
-        // 隨機落點
-        let randomNum = Math.random() * totalWeight;
-        let sum = 0;
-        let selected = null;
-
-        for (let item of activeTasks) {
-            sum += item.currentWeight;
-            if (randomNum <= sum) {
-                selected = item.task;
-                break;
-            }
-        }
-
-        if (selected) {
-            // 更新抽取數據
-            selected.drawCount = (selected.drawCount || 0) + 1;
-            state.currentTask = { name: selected.name, content: selected.content };
-
-            // 檢查是否觸發「重置加權條件」
-            if (selected.resetCondition === 'draw_n' && selected.drawCount >= parseInt(selected.resetParam)) {
-                selected.taskStreak = 0; // 重置該任務的獨立堅持天數
-                selected.drawCount = 0;  // 重置抽取次數計數
-            }
-            
-            saveState();
-            renderMain();
-        }
-    }
-
-    // 核心邏輯 3：過了一天（增加堅持天數）
-    function nextDay() {
-        state.streak++;
-        // 每一條任務的獨立堅持天數也 +1
-        state.tasks.forEach(t => {
-            t.taskStreak = (t.taskStreak || 0) + 1;
-        });
-        saveState();
-        renderMain();
-    }
-
-    // 核心邏輯 4：挑戰失敗重置
-    function failChallenge() {
-        if(confirm("確定宣告挑戰失敗嗎？這會將天數與任務加權歸零喔！")) {
-            state.streak = 0;
-            state.currentTask = null;
-            // 任務庫不刪除，但所有任務的加權數據歸零（獨立天數與抽取次數歸零）
-            state.tasks.forEach(t => {
-                t.taskStreak = 0;
-                t.drawCount = 0;
-            });
-            saveState();
-            renderMain();
-            alert("挑戰已重置，加油！重新開始！");
-        }
-    }
-
-    // 主頁畫面渲染
-    function renderMain() {
-        document.getElementById('streak-count').innerText = state.streak;
-        const container = document.getElementById('drawn-task-container');
-        const detail = document.getElementById('drawn-task-detail');
-        
-        if (state.currentTask) {
-            container.innerText = state.currentTask.name;
-            detail.innerText = state.currentTask.content || "無詳細內容";
-        } else {
-            container.innerText = "尚未抽取任務";
-            detail.innerText = "";
-        }
-    }
-
-    // 任務庫畫面渲染 (CRUD)
-    function renderPool() {
-        const listContainer = document.getElementById('task-list');
-        listContainer.innerHTML = '';
-
-        state.tasks.forEach((t, index) => {
-            let curW = calculateCurrentWeight(t).toFixed(1);
-            let item = document.createElement('div');
-            item.className = 'task-item';
-            item.innerHTML = `
-                <div class="task-info">
-                    <strong>${t.name}</strong> <span style="font-size:12px; color:var(--primary);">[當前權重: ${curW}]</span><br>
-                    <small style="color:var(--text-secondary)">初始: ${t.initWeight} | 模式: ${t.weightMode} | 獨立天數: ${t.taskStreak || 0} | 已抽: ${t.drawCount || 0}次</small>
-                </div>
-                <div class="task-actions">
-                    <button class="secondary" onclick="editTask('${t.id}')">✏️</button>
-                    <button class="danger" onclick="deleteTask('${t.id}')">🗑️</button>
-                </div>
-            `;
-            listContainer.appendChild(item);
-        });
-    }
-
-    // 儲存任務 (包含新增與修改)
-    function saveTask() {
-        const id = document.getElementById('task-id').value;
-        const name = document.getElementById('task-name').value.trim();
-        const initWeight = parseFloat(document.getElementById('task-init-weight').value) || 10;
-        const weightMode = document.getElementById('task-weight-mode').value;
-        const resetCondition = document.getElementById('task-reset-condition').value;
-        const resetParam = document.getElementById('task-reset-param').value;
-        const content = document.getElementById('task-content').value.trim();
-
-        if (!name) {
-            alert("請輸入任務名稱！");
-            return;
-        }
-
-        if (id) {
-            // 編輯模式
-            let task = state.tasks.find(t => t.id === id);
-            if (task) {
-                task.name = name;
-                task.initWeight = initWeight;
-                task.weightMode = weightMode;
-                task.resetCondition = resetCondition;
-                task.resetParam = resetParam;
-                task.content = content;
-            }
-        } else {
-            // 新增模式
-            let newTask = {
-                id: Date.now().toString(),
-                name: name,
-                initWeight: initWeight,
-                weightMode: weightMode,
-                resetCondition: resetCondition,
-                resetParam: resetParam,
-                content: content,
-                taskStreak: 0, // 初始獨立天數為 0
-                drawCount: 0   // 初始被抽到次數為 0
-            };
-            state.tasks.push(newTask);
-        }
-
-        saveState();
-        resetForm();
-        renderPool();
-    }
-
-    function editTask(id) {
-        let task = state.tasks.find(t => t.id === id);
-        if (!task) return;
-
-        document.getElementById('task-id').value = task.id;
-        document.getElementById('task-name').value = task.name;
-        document.getElementById('task-init-weight').value = task.initWeight;
-        document.getElementById('task-weight-mode').value = task.weightMode;
-        document.getElementById('task-reset-condition').value = task.resetCondition;
-        document.getElementById('task-reset-param').value = task.resetParam || 3;
-        document.getElementById('task-content').value = task.content;
-
-        toggleResetParam();
-        document.getElementById('form-title').innerText = "編輯任務";
-        document.getElementById('btn-cancel-edit').style.display = "block";
-    }
-
-    function deleteTask(id) {
-        if(confirm("確定要刪除這個任務嗎？")) {
-            state.tasks = state.tasks.filter(t => t.id !== id);
-            saveState();
-            renderPool();
-        }
-    }
-
-    function resetForm() {
-        document.getElementById('task-id').value = '';
-        document.getElementById('task-name').value = '';
-        document.getElementById('task-init-weight').value = '10';
-        document.getElementById('task-weight-mode').value = 'constant';
-        document.getElementById('task-reset-condition').value = 'none';
-        document.getElementById('task-reset-param').value = '3';
-        document.getElementById('task-content').value = '';
-        
-        toggleResetParam();
-        document.getElementById('form-title').innerText = "添加新任務";
-        document.getElementById('btn-cancel-edit').style.display = "none";
-    }
-
-    // 啟動載入
-    window.onload = init;
+    orgasmScreen.classList.add('hidden');
+    dayScreen.classList.remove('hidden');
+    document.body.style.backgroundImage = '';
+    updateDayView();
+  }
 </script>
 </body>
 </html>
