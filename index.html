@@ -149,21 +149,22 @@
 <div id="end-screen" class="screen hidden">
   <h1 id="end-title"></h1>
   <p id="end-desc"></p>
-  <button onclick="location.reload()">重新開始</button>
+  <button onclick="clearSaveAndReload()">重新開始</button>
 </div>
 
 <script>
   // ===================== 狀態 =====================
   let minDays = 10;
   let maxDays = 20;
-  let secretDay = 0;          // 真正的射精日
+  let secretDay = 0;
   let currentDay = 1;
-  let fakeDays = [];          // 本局會出現的假射精日（最多2個）
-  let photos = [];            // 使用者上傳的照片 (objectURL)
+  let fakeDays = [];
+  let photos = [];
   let isFakeToday = false;
-  let teaseProb = 0.8;        // 戲弄機率
+  let teaseProb = 0.8;
   let countdownInterval = null;
   let remaining = 100;
+  let challengeStarted = false;
 
   // ===================== DOM =====================
   const setupScreen = document.getElementById('setup-screen');
@@ -179,13 +180,77 @@
   const startCountdownBtn = document.getElementById('start-countdown-btn');
   const finishBtn = document.getElementById('finish-btn');
 
-  // ===================== 初始化 =====================
-  document.getElementById('photo-upload').addEventListener('change', (e) => {
-    photos = [];
-    Array.from(e.target.files).forEach(file => {
-      photos.push(URL.createObjectURL(file));
-    });
+  // ===================== 新增：儲存 / 讀取進度 =====================
+  const SAVE_KEY = 'long_abstinence_challenge_save';
+
+  function saveProgress() {
+    const data = {
+      minDays,
+      maxDays,
+      secretDay,
+      currentDay,
+      fakeDays,
+      photos,               // base64 字串陣列
+      challengeStarted,
+      timestamp: Date.now()
+    };
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.warn('儲存失敗（可能是照片太大）', e);
+    }
+  }
+
+  function loadProgress() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      minDays = data.minDays;
+      maxDays = data.maxDays;
+      secretDay = data.secretDay;
+      currentDay = data.currentDay;
+      fakeDays = data.fakeDays || [];
+      photos = data.photos || [];
+      challengeStarted = data.challengeStarted;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function clearSaveAndReload() {
+    localStorage.removeItem(SAVE_KEY);
+    location.reload();
+  }
+
+  // 頁面載入時自動恢復
+  window.addEventListener('DOMContentLoaded', () => {
+    if (loadProgress() && challengeStarted) {
+      setupScreen.classList.add('hidden');
+      dayScreen.classList.remove('hidden');
+      updateDayView();
+    }
   });
+
+  // ===================== 初始化 =====================
+  document.getElementById('photo-upload').addEventListener('change', async (e) => {
+    photos = [];
+    const files = Array.from(e.target.files);
+    for (const file of files) {
+      const base64 = await fileToBase64(file);
+      photos.push(base64);
+    }
+    if (challengeStarted) saveProgress();
+  });
+
+  function fileToBase64(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(file);
+    });
+  }
 
   document.getElementById('start-btn').addEventListener('click', startChallenge);
   document.getElementById('next-day-btn').addEventListener('click', nextDay);
@@ -199,14 +264,12 @@
     if (minDays > maxDays) [minDays, maxDays] = [maxDays, minDays];
     if (minDays < 3) minDays = 3;
 
-    // 隨機真正射精日
     secretDay = Math.floor(Math.random() * (maxDays - minDays + 1)) + minDays;
 
-    // 決定 0～2 個假射精日（只能出現在 minDays 以上，且小於 secretDay）
     fakeDays = [];
     const possibleFakes = [];
     for (let d = minDays; d < secretDay; d++) possibleFakes.push(d);
-    const fakeCount = Math.min(2, possibleFakes.length, Math.floor(Math.random() * 3)); // 0~2
+    const fakeCount = Math.min(2, possibleFakes.length, Math.floor(Math.random() * 3));
     for (let i = 0; i < fakeCount; i++) {
       if (possibleFakes.length === 0) break;
       const idx = Math.floor(Math.random() * possibleFakes.length);
@@ -214,9 +277,11 @@
     }
 
     currentDay = 1;
+    challengeStarted = true;
     setupScreen.classList.add('hidden');
     dayScreen.classList.remove('hidden');
     updateDayView();
+    saveProgress();          // 新增：開始後立即儲存
   }
 
   // ===================== 更新每日畫面 =====================
@@ -224,33 +289,29 @@
     dayDisplay.textContent = `第 ${currentDay} 天`;
     isFakeToday = fakeDays.includes(currentDay);
 
-    // 清除背景
     document.body.style.backgroundImage = '';
 
     if (currentDay === secretDay) {
-      // 真正射精日
       message.innerHTML = `<span class="success">恭喜你堅持到了這天</span><br>準備好射精了嗎？`;
       document.getElementById('next-day-btn').classList.add('hidden');
-      // 顯示開始按鈕（透過切換畫面）
       setTimeout(() => {
         dayScreen.classList.add('hidden');
-        showOrgasmScreen(false); // false = 真實
+        showOrgasmScreen(false);
       }, 1500);
     } else if (isFakeToday) {
-      // 假射精日
       message.innerHTML = `<span class="success">恭喜你堅持到了這天</span><br>準備好射精了嗎？`;
       document.getElementById('next-day-btn').classList.add('hidden');
       setTimeout(() => {
         dayScreen.classList.add('hidden');
-        showOrgasmScreen(true); // true = 假的
+        showOrgasmScreen(true);
       }, 1500);
     } else {
-      // 普通禁止日
       message.textContent = '今天不准射精';
       document.getElementById('next-day-btn').classList.remove('hidden');
     }
 
     status.textContent = `已堅持 ${currentDay} 天`;
+    saveProgress();          // 新增：每次更新都儲存
   }
 
   // ===================== 下一天 =====================
@@ -269,7 +330,6 @@
     remaining = 100;
     teaseProb = 0.8;
 
-    // 設定背景
     if (photos.length > 0) {
       const randomPhoto = photos[Math.floor(Math.random() * photos.length)];
       document.body.style.backgroundImage = `url(${randomPhoto})`;
@@ -282,6 +342,7 @@
       orgasmTitle.textContent = '真正的射精日到了';
       orgasmMessage.textContent = '按下開始後將進入 100 秒倒數，結束後請在 5 秒內射精';
     }
+    saveProgress();
   }
 
   // ===================== 開始 100 秒倒數 =====================
@@ -292,10 +353,9 @@
     orgasmMessage.textContent = '跟著倒數…準備射精';
 
     countdownInterval = setInterval(() => {
-      // 戲弄機制：剩餘 ≤3 秒時有機率加 20 秒
       if (remaining <= 3 && remaining > 0 && Math.random() < teaseProb) {
         remaining += 20;
-        teaseProb *= 0.8; // 機率乘上 0.8
+        teaseProb *= 0.8;
         orgasmMessage.textContent = '戲弄你的！再加 20 秒！';
         countdownEl.style.color = '#ffaa00';
         setTimeout(() => countdownEl.style.color = '#ff4d6d', 800);
@@ -315,7 +375,6 @@
   // ===================== 倒數結束 =====================
   function onCountdownEnd() {
     if (isFakeToday) {
-      // 假射精日
       countdownEl.style.display = 'none';
       orgasmTitle.textContent = '';
       orgasmMessage.innerHTML = `<span class="fail" style="font-size:1.6rem;">其實今天不能射喔</span><br><br>繼續忍耐吧`;
@@ -323,13 +382,12 @@
         orgasmScreen.classList.add('hidden');
         dayScreen.classList.remove('hidden');
         document.body.style.backgroundImage = '';
-        // 把假日標記移除，避免重複
         fakeDays = fakeDays.filter(d => d !== currentDay);
         document.getElementById('next-day-btn').classList.remove('hidden');
         message.textContent = '今天不准射精（剛剛是假的）';
+        saveProgress();
       }, 3500);
     } else {
-      // 真正射精日 → 給 5 秒射精窗口
       countdownEl.textContent = '射！';
       countdownEl.style.color = '#ff0000';
       orgasmMessage.textContent = '請在 5 秒內射出來！';
@@ -342,7 +400,6 @@
           orgasmMessage.textContent = '時間到。你射到了嗎？';
           finishBtn.classList.remove('hidden');
           finishBtn.textContent = '我成功射精了';
-          // 再加一個失敗按鈕
           const failBtn = document.createElement('button');
           failBtn.textContent = '我沒射到 / 失敗了';
           failBtn.className = 'secondary';
@@ -356,19 +413,17 @@
 
   // ===================== 成功 / 失敗 =====================
   function askResult() {
-    // 成功
     orgasmScreen.classList.add('hidden');
     endScreen.classList.remove('hidden');
     document.getElementById('end-title').textContent = '挑戰成功！';
     document.getElementById('end-title').className = 'success';
     document.getElementById('end-desc').textContent = `你總共堅持了 ${currentDay} 天，並成功在射精日射精。恭喜你完成挑戰。`;
+    localStorage.removeItem(SAVE_KEY);   // 成功後清除存檔
   }
 
   function failOrgasm() {
-    // 失敗 → 從第一天重新開始
     alert('射精失敗…挑戰將從第 1 天重新開始。');
     currentDay = 1;
-    // 重新抽秘密日與假日（可選擇保留原本或重抽，這裡選擇重抽增加變化）
     secretDay = Math.floor(Math.random() * (maxDays - minDays + 1)) + minDays;
     fakeDays = [];
     const possibleFakes = [];
@@ -384,6 +439,7 @@
     dayScreen.classList.remove('hidden');
     document.body.style.backgroundImage = '';
     updateDayView();
+    saveProgress();
   }
 </script>
 </body>
