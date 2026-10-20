@@ -1,628 +1,730 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>長期禁慾挑戰</title>
-<style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  html, body {
-    height: 100%;
-    background: #0a0a0a;
-    color: #fff;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    overflow: hidden;
-  }
-  body {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    position: relative;
-  }
-  .bg-layer {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    z-index: 0;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    display: none;
-  }
-  .bg-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.72);
-    z-index: 1;
-    display: none;
-  }
-  .screen {
-    position: relative;
-    z-index: 10;
-    width: 100%;
-    max-width: 420px;
-    padding: 24px 20px;
-    text-align: center;
-    display: none;
-  }
-  .screen.active { display: block; }
-  h1 {
-    font-size: 1.8rem;
-    color: #ff2a2a;
-    margin-bottom: 8px;
-    letter-spacing: 2px;
-  }
-  h2 {
-    font-size: 1.4rem;
-    margin-bottom: 16px;
-    color: #ff4444;
-  }
-  .subtitle {
-    color: #aaa;
-    font-size: 0.95rem;
-    margin-bottom: 28px;
-  }
-  .input-group {
-    margin-bottom: 18px;
-    text-align: left;
-  }
-  .input-group label {
-    display: block;
-    font-size: 0.9rem;
-    color: #ccc;
-    margin-bottom: 6px;
-  }
-  .input-row {
-    display: flex;
-    gap: 12px;
-  }
-  input[type="number"] {
-    width: 100%;
-    padding: 12px 14px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 10px;
-    color: #fff;
-    font-size: 1.1rem;
-    outline: none;
-  }
-  input[type="number"]:focus {
-    border-color: #ff2a2a;
-  }
-  input[type="file"] {
-    display: none;
-  }
-  .file-btn {
-    display: inline-block;
-    padding: 12px 20px;
-    background: #1a1a1a;
-    border: 1px dashed #555;
-    border-radius: 10px;
-    color: #ccc;
-    font-size: 0.95rem;
-    cursor: pointer;
-    width: 100%;
-    transition: all 0.2s;
-  }
-  .file-btn:hover, .file-btn:active {
-    border-color: #ff2a2a;
-    color: #fff;
-  }
-  .photo-preview {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 12px;
-    justify-content: center;
-  }
-  .photo-preview img {
-    width: 64px;
-    height: 64px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 1px solid #333;
-  }
-  .btn {
-    display: block;
-    width: 100%;
-    padding: 16px;
-    margin-top: 12px;
-    border: none;
-    border-radius: 12px;
-    font-size: 1.15rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, #ff2a2a, #cc0000);
-    color: #fff;
-  }
-  .btn-primary:active {
-    transform: scale(0.97);
-    opacity: 0.9;
-  }
-  .btn-secondary {
-    background: #222;
-    color: #ddd;
-    border: 1px solid #444;
-  }
-  .btn-secondary:active {
-    background: #333;
-  }
-  .btn-danger {
-    background: #330000;
-    color: #ff6666;
-    border: 1px solid #550000;
-  }
-  .day-number {
-    font-size: 4.5rem;
-    font-weight: 800;
-    color: #ff2a2a;
-    line-height: 1;
-    margin: 20px 0 8px;
-  }
-  .day-label {
-    font-size: 1.1rem;
-    color: #aaa;
-    margin-bottom: 30px;
-  }
-  .status-text {
-    font-size: 1.35rem;
-    margin: 24px 0;
-    line-height: 1.5;
-  }
-  .status-text.forbid {
-    color: #ff5555;
-  }
-  .status-text.allow {
-    color: #ffcc00;
-  }
-  .countdown-display {
-    font-size: 5.5rem;
-    font-weight: 800;
-    color: #ff2a2a;
-    margin: 30px 0;
-    font-variant-numeric: tabular-nums;
-  }
-  .tease-msg {
-    color: #ffaa00;
-    font-size: 1.1rem;
-    margin-top: 10px;
-    min-height: 1.4em;
-  }
-  .result-msg {
-    font-size: 2rem;
-    font-weight: 700;
-    margin: 30px 0;
-  }
-  .result-msg.success { color: #00ff88; }
-  .result-msg.fail { color: #ff5555; }
-  .result-msg.fake { color: #ffaa00; }
-  .window-timer {
-    font-size: 1.2rem;
-    color: #ffcc00;
-    margin-bottom: 20px;
-  }
-  .hidden { display: none !important; }
-  .small-note {
-    font-size: 0.8rem;
-    color: #666;
-    margin-top: 20px;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>長期堅持挑戰</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        body {
+            background-color: #0d0d0d;
+            color: #f0f0f0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Background Container with Photo & Overlay */
+        #bg-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            z-index: -2;
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        #bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: -1;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            padding: 24px;
+            background: rgba(20, 20, 20, 0.85);
+            border: 1px solid #333;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            margin: 16px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            color: #ff3333;
+            letter-spacing: 1px;
+        }
+
+        p {
+            color: #b0b0b0;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #d0d0d0;
+        }
+
+        input[type="number"], input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus {
+            border-color: #ff3333;
+        }
+
+        .photo-upload-container {
+            border: 2px dashed #444;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .photo-upload-container:hover {
+            border-color: #ff3333;
+        }
+
+        .photo-previews {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .photo-thumb {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #555;
+        }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 14px;
+            background: #ff3333;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 14px rgba(255, 51, 51, 0.4);
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #e60000;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: #2a2a2a;
+            box-shadow: none;
+            color: #ccc;
+        }
+        .btn-secondary:hover {
+            background: #3a3a3a;
+            color: #fff;
+        }
+
+        /* Daily Screen */
+        .day-display {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #fff;
+            margin: 20px 0 10px 0;
+            text-shadow: 0 0 20px rgba(255, 51, 51, 0.3);
+        }
+
+        .day-status {
+            font-size: 1.2rem;
+            color: #ff4d4d;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        /* Countdown Screen */
+        .countdown-timer {
+            font-size: 5rem;
+            font-weight: 900;
+            color: #ff3333;
+            margin: 30px 0;
+            font-family: monospace;
+            text-shadow: 0 0 30px rgba(255, 51, 51, 0.5);
+        }
+
+        .alert-toast {
+            background: rgba(255, 51, 51, 0.2);
+            border: 1px solid #ff3333;
+            color: #ff8080;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        /* Modal Overlay for Success Window */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            color: #ff3333;
+            margin-bottom: 15px;
+        }
+
+        .modal-timer {
+            font-size: 2rem;
+            color: #fff;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-buttons .btn {
+            margin-top: 0;
+        }
+    </style>
 </head>
 <body>
-  <div class="bg-layer" id="bgLayer"></div>
-  <div class="bg-overlay" id="bgOverlay"></div>
 
-  <!-- 開始設定畫面 -->
-  <div class="screen active" id="setupScreen">
-    <h1>長期禁慾挑戰</h1>
-    <p class="subtitle">設定挑戰天數區間，系統將秘密抽取射精日</p>
-    
-    <div class="input-group">
-      <label>最小天數</label>
-      <input type="number" id="minDays" min="1" max="365" value="10">
+    <div id="bg-container"></div>
+    <div id="bg-overlay"></div>
+
+    <!-- Setup Screen -->
+    <div id="setup-screen" class="container">
+        <h1>長期堅持挑戰</h1>
+        <p>設定你的天數區間與照片，考驗你的意志力與自我控制。</p>
+        
+        <div class="form-group">
+            <label for="min-days">最小天數</label>
+            <input type="number" id="min-days" value="10" min="1" max="365">
+        </div>
+
+        <div class="form-group">
+            <label for="max-days">最大天數</label>
+            <input type="number" id="max-days" value="20" min="1" max="365">
+        </div>
+
+        <div class="form-group">
+            <label>上傳背景照片 (可多張)</label>
+            <div class="photo-upload-container" onclick="document.getElementById('photo-input').click()">
+                <span>點擊選擇照片檔案</span>
+                <input type="file" id="photo-input" accept="image/*" multiple style="display: none;">
+            </div>
+            <div class="photo-previews" id="photo-previews"></div>
+        </div>
+
+        <button class="btn" id="start-btn">開始挑戰</button>
     </div>
-    <div class="input-group">
-      <label>最大天數</label>
-      <input type="number" id="maxDays" min="1" max="365" value="20">
+
+    <!-- Daily Screen -->
+    <div id="daily-screen" class="container hidden">
+        <h1>長期堅持挑戰</h1>
+        <div class="day-display" id="day-display">第 1 天</div>
+        <div class="day-status" id="day-status">今天必須繼續堅持</div>
+        
+        <button class="btn" id="next-day-btn">下一天</button>
+        <button class="btn btn-secondary" id="restart-setup-btn" style="margin-top: 10px;">放棄並重新開始</button>
     </div>
-    
-    <div class="input-group">
-      <label>上傳背景照片（可多選）</label>
-      <label class="file-btn" for="photoInput">選擇照片</label>
-      <input type="file" id="photoInput" accept="image/*" multiple>
-      <div class="photo-preview" id="photoPreview"></div>
+
+    <!-- Countdown Screen -->
+    <div id="countdown-screen" class="container hidden">
+        <h1 id="countdown-title">關鍵時刻</h1>
+        <p id="countdown-desc">恭喜你堅持到了這天！請完成最後的意志力考驗。</p>
+        
+        <div id="toast-container"></div>
+
+        <div class="countdown-timer" id="timer-display">100</div>
+
+        <button class="btn" id="start-countdown-btn">開始倒數</button>
     </div>
-    
-    <button class="btn btn-primary" id="startBtn">開始挑戰</button>
-    <p class="small-note">進度會自動保存，關閉後可繼續</p>
-  </div>
 
-  <!-- 每日畫面 -->
-  <div class="screen" id="dailyScreen">
-    <div class="day-label">目前進度</div>
-    <div class="day-number" id="currentDayNum">1</div>
-    <div class="day-label">天</div>
-    <div class="status-text forbid" id="dailyStatus">今天不准射精</div>
-    <button class="btn btn-primary" id="nextDayBtn">下一天</button>
-  </div>
+    <!-- End Screen (Success) -->
+    <div id="end-screen" class="container hidden">
+        <h1>挑戰成功</h1>
+        <p style="font-size: 1.1rem; margin: 20px 0; color: #fff;">你展現了無比的毅力與自我控制，成功完成了挑戰！</p>
+        <button class="btn" id="end-restart-btn">重新開始新挑戰</button>
+    </div>
 
-  <!-- 射精日 / 假射精日 提示畫面 -->
-  <div class="screen" id="climaxIntroScreen">
-    <h2>恭喜你堅持到了這天</h2>
-    <p class="status-text allow">準備好了嗎？</p>
-    <button class="btn btn-primary" id="startCountdownBtn">開始倒數</button>
-  </div>
+    <!-- Success Window Modal (Real Completion Day 5-sec window) -->
+    <div id="success-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-title">完成！</div>
+            <p>是否成功達成目標？</p>
+            <div class="modal-timer" id="modal-timer">5</div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" id="fail-btn">失敗 (重來)</button>
+                <button class="btn" id="success-btn">成功 (達成)</button>
+            </div>
+        </div>
+    </div>
 
-  <!-- 倒數畫面 -->
-  <div class="screen" id="countdownScreen">
-    <div class="day-label">倒數進行中</div>
-    <div class="countdown-display" id="countdownNum">100</div>
-    <div class="tease-msg" id="teaseMsg"></div>
-  </div>
+    <script>
+        // State Variables
+        let minDays = 10;
+        let maxDays = 20;
+        let secretDay = 0;
+        let currentDay = 1;
+        let fakeDays = [];
+        let photos = [];
+        let isStarted = false;
+        let currentScreen = 'daily'; // 'daily', 'countdown', 'end', 'setup'
+        let subState = 'normal';
 
-  <!-- 假射精日結果 -->
-  <div class="screen" id="fakeResultScreen">
-    <div class="result-msg fake">其實今天不能射喔</div>
-    <p class="status-text">繼續堅持吧</p>
-  </div>
+        // Countdown variables
+        let countdownTimerId = null;
+        let remainingSeconds = 100;
+        let delayProb = 0.8;
+        let modalTimerId = null;
+        let modalRemaining = 5;
 
-  <!-- 真正射精日窗口 -->
-  <div class="screen" id="realWindowScreen">
-    <div class="result-msg success">射！</div>
-    <div class="window-timer" id="windowTimer">剩餘 5 秒</div>
-    <p class="status-text">把握時間！</p>
-  </div>
+        // DOM Elements
+        const bgContainer = document.getElementById('bg-container');
+        const setupScreen = document.getElementById('setup-screen');
+        const dailyScreen = document.getElementById('daily-screen');
+        const countdownScreen = document.getElementById('countdown-screen');
+        const endScreen = document.getElementById('end-screen');
+        const successModal = document.getElementById('success-modal');
 
-  <!-- 詢問是否成功 -->
-  <div class="screen" id="askSuccessScreen">
-    <h2>時間到</h2>
-    <p class="status-text">你有成功射精嗎？</p>
-    <button class="btn btn-primary" id="successBtn">成功了</button>
-    <button class="btn btn-danger" id="failBtn">沒有 / 失敗</button>
-  </div>
+        const minDaysInput = document.getElementById('min-days');
+        const maxDaysInput = document.getElementById('max-days');
+        const photoInput = document.getElementById('photo-input');
+        const photoPreviews = document.getElementById('photo-previews');
+        const startBtn = document.getElementById('start-btn');
 
-  <!-- 結束畫面 -->
-  <div class="screen" id="endScreen">
-    <div class="result-msg success">挑戰成功</div>
-    <p class="status-text">恭喜你完成長期禁慾挑戰！</p>
-    <button class="btn btn-primary" id="restartBtn">重新開始</button>
-  </div>
+        const dayDisplay = document.getElementById('day-display');
+        const dayStatus = document.getElementById('day-status');
+        const nextDayBtn = document.getElementById('next-day-btn');
+        const restartSetupBtn = document.getElementById('restart-setup-btn');
 
-<script>
-(function() {
-  const STORAGE_KEY = 'abstinence_challenge_v1';
+        const countdownTitle = document.getElementById('countdown-title');
+        const countdownDesc = document.getElementById('countdown-desc');
+        const toastContainer = document.getElementById('toast-container');
+        const timerDisplay = document.getElementById('timer-display');
+        const startCountdownBtn = document.getElementById('start-countdown-btn');
 
-  // 狀態
-  let state = {
-    started: false,
-    minDays: 10,
-    maxDays: 20,
-    secretDay: null,
-    fakeDays: [],
-    currentDay: 1,
-    photos: [], // base64 strings
-    teaseProbability: 0.8
-  };
+        const endRestartBtn = document.getElementById('end-restart-btn');
+        const modalTimer = document.getElementById('modal-timer');
+        const successBtn = document.getElementById('success-btn');
+        const failBtn = document.getElementById('fail-btn');
 
-  // DOM
-  const screens = {
-    setup: document.getElementById('setupScreen'),
-    daily: document.getElementById('dailyScreen'),
-    climaxIntro: document.getElementById('climaxIntroScreen'),
-    countdown: document.getElementById('countdownScreen'),
-    fakeResult: document.getElementById('fakeResultScreen'),
-    realWindow: document.getElementById('realWindowScreen'),
-    askSuccess: document.getElementById('askSuccessScreen'),
-    end: document.getElementById('endScreen')
-  };
+        const STORAGE_KEY = 'long_term_challenge_state_v1';
 
-  const bgLayer = document.getElementById('bgLayer');
-  const bgOverlay = document.getElementById('bgOverlay');
-  const minDaysInput = document.getElementById('minDays');
-  const maxDaysInput = document.getElementById('maxDays');
-  const photoInput = document.getElementById('photoInput');
-  const photoPreview = document.getElementById('photoPreview');
-  const startBtn = document.getElementById('startBtn');
-  const currentDayNum = document.getElementById('currentDayNum');
-  const dailyStatus = document.getElementById('dailyStatus');
-  const nextDayBtn = document.getElementById('nextDayBtn');
-  const startCountdownBtn = document.getElementById('startCountdownBtn');
-  const countdownNum = document.getElementById('countdownNum');
-  const teaseMsg = document.getElementById('teaseMsg');
-  const windowTimer = document.getElementById('windowTimer');
-  const successBtn = document.getElementById('successBtn');
-  const failBtn = document.getElementById('failBtn');
-  const restartBtn = document.getElementById('restartBtn');
+        // Load state on startup
+        window.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            renderPreviews();
+            renderScreen();
+        });
 
-  let countdownInterval = null;
-  let windowInterval = null;
-  let isRealClimax = false;
+        // Photo Upload Handling
+        photoInput.addEventListener('change', async (e) => {
+            const files = e.target.files;
+            if (!files) return;
+            for (let file of files) {
+                try {
+                    const base64 = await fileToBase64(file);
+                    photos.push(base64);
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+            renderPreviews();
+        });
 
-  // ========== localStorage ==========
-  function saveState() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (e) {
-      console.warn('localStorage save failed', e);
-    }
-  }
-
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const data = JSON.parse(raw);
-        if (data && data.started) {
-          state = Object.assign(state, data);
-          return true;
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
         }
-      }
-    } catch (e) {}
-    return false;
-  }
 
-  function clearState() {
-    localStorage.removeItem(STORAGE_KEY);
-    state = {
-      started: false,
-      minDays: 10,
-      maxDays: 20,
-      secretDay: null,
-      fakeDays: [],
-      currentDay: 1,
-      photos: [],
-      teaseProbability: 0.8
-    };
-  }
-
-  // ========== 工具 ==========
-  function showScreen(name) {
-    Object.values(screens).forEach(s => s.classList.remove('active'));
-    screens[name].classList.add('active');
-  }
-
-  function setBackground(show) {
-    if (show && state.photos.length > 0) {
-      const idx = Math.floor(Math.random() * state.photos.length);
-      bgLayer.style.backgroundImage = `url(${state.photos[idx]})`;
-      bgLayer.style.display = 'block';
-      bgOverlay.style.display = 'block';
-    } else {
-      bgLayer.style.display = 'none';
-      bgOverlay.style.display = 'none';
-      bgLayer.style.backgroundImage = '';
-    }
-  }
-
-  function randInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-
-  function generateSecretAndFakes() {
-    const min = state.minDays;
-    const max = state.maxDays;
-    state.secretDay = randInt(min, max);
-
-    // 假射精日：最多 2 個，必須 > minDays 且 < secretDay
-    state.fakeDays = [];
-    const possible = [];
-    for (let d = min + 1; d < state.secretDay; d++) {
-      possible.push(d);
-    }
-    // 打亂後取最多 2 個
-    for (let i = possible.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [possible[i], possible[j]] = [possible[j], possible[i]];
-    }
-    const count = Math.min(2, possible.length);
-    // 有機會少於 2 個（甚至 0）
-    const actualCount = Math.floor(Math.random() * (count + 1));
-    state.fakeDays = possible.slice(0, actualCount).sort((a,b) => a-b);
-  }
-
-  // ========== 開始設定 ==========
-  photoInput.addEventListener('change', function(e) {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
-
-    const readers = files.map(file => {
-      return new Promise(resolve => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(file);
-      });
-    });
-
-    Promise.all(readers).then(results => {
-      state.photos = state.photos.concat(results);
-      renderPhotoPreview();
-    });
-  });
-
-  function renderPhotoPreview() {
-    photoPreview.innerHTML = '';
-    state.photos.forEach(src => {
-      const img = document.createElement('img');
-      img.src = src;
-      photoPreview.appendChild(img);
-    });
-  }
-
-  startBtn.addEventListener('click', function() {
-    let min = parseInt(minDaysInput.value, 10) || 10;
-    let max = parseInt(maxDaysInput.value, 10) || 20;
-    if (min < 1) min = 1;
-    if (max < min) max = min;
-    if (max > 365) max = 365;
-
-    state.minDays = min;
-    state.maxDays = max;
-    state.currentDay = 1;
-    state.teaseProbability = 0.8;
-    state.started = true;
-    generateSecretAndFakes();
-    saveState();
-    enterDaily();
-  });
-
-  // ========== 每日畫面 ==========
-  function enterDaily() {
-    setBackground(false);
-    currentDayNum.textContent = state.currentDay;
-    dailyStatus.textContent = '今天不准射精';
-    dailyStatus.className = 'status-text forbid';
-    nextDayBtn.style.display = 'block';
-    showScreen('daily');
-    saveState();
-  }
-
-  nextDayBtn.addEventListener('click', function() {
-    state.currentDay += 1;
-    saveState();
-
-    const day = state.currentDay;
-    if (day === state.secretDay || state.fakeDays.includes(day)) {
-      isRealClimax = (day === state.secretDay);
-      setBackground(true);
-      showScreen('climaxIntro');
-    } else {
-      currentDayNum.textContent = day;
-      saveState();
-    }
-  });
-
-  // ========== 倒數流程 ==========
-  startCountdownBtn.addEventListener('click', function() {
-    startCountdown();
-  });
-
-  function startCountdown() {
-    showScreen('countdown');
-    let remaining = 100;
-    state.teaseProbability = 0.8;
-    teaseMsg.textContent = '';
-    countdownNum.textContent = remaining;
-
-    if (countdownInterval) clearInterval(countdownInterval);
-
-    countdownInterval = setInterval(() => {
-      remaining -= 1;
-      countdownNum.textContent = remaining;
-
-      if (remaining <= 3 && remaining > 0) {
-        // 戲弄判斷
-        if (Math.random() < state.teaseProbability) {
-          remaining += 20;
-          countdownNum.textContent = remaining;
-          state.teaseProbability *= 0.8;
-          teaseMsg.textContent = '哈哈，再忍一下～';
-          setTimeout(() => { teaseMsg.textContent = ''; }, 1500);
+        function renderPreviews() {
+            photoPreviews.innerHTML = '';
+            photos.forEach((photo) => {
+                const img = document.createElement('img');
+                img.src = photo;
+                img.className = 'photo-thumb';
+                photoPreviews.appendChild(img);
+            });
         }
-      }
 
-      if (remaining <= 0) {
-        clearInterval(countdownInterval);
-        countdownInterval = null;
-        onCountdownEnd();
-      }
-    }, 1000);
-  }
+        // Start Challenge
+        startBtn.addEventListener('click', () => {
+            const min = parseInt(minDaysInput.value);
+            const max = parseInt(maxDaysInput.value);
 
-  function onCountdownEnd() {
-    if (!isRealClimax) {
-      // 假射精日
-      showScreen('fakeResult');
-      setTimeout(() => {
-        setBackground(false);
-        enterDaily();
-      }, 2800);
-    } else {
-      // 真正射精日
-      showRealWindow();
-    }
-  }
+            if (isNaN(min) || isNaN(max) || min < 1 || max < min) {
+                alert('請輸入有效的天數範圍（最小天數需大於 0 且小於等於最大天數）');
+                return;
+            }
 
-  function showRealWindow() {
-    showScreen('realWindow');
-    let left = 5;
-    windowTimer.textContent = `剩餘 ${left} 秒`;
+            minDays = min;
+            maxDays = max;
+            currentDay = 1;
+            isStarted = true;
+            currentScreen = 'daily';
+            subState = 'normal';
 
-    if (windowInterval) clearInterval(windowInterval);
-    windowInterval = setInterval(() => {
-      left -= 1;
-      windowTimer.textContent = `剩餘 ${left} 秒`;
-      if (left <= 0) {
-        clearInterval(windowInterval);
-        windowInterval = null;
-        showScreen('askSuccess');
-      }
-    }, 1000);
-  }
+            // Generate secret completion day
+            secretDay = Math.floor(Math.random() * (maxDays - minDays + 1)) + minDays;
 
-  // ========== 成功 / 失敗 ==========
-  successBtn.addEventListener('click', function() {
-    clearState();
-    setBackground(false);
-    showScreen('end');
-  });
+            // Generate fake completion days (at most 2, > minDays, < secretDay)
+            fakeDays = [];
+            if (secretDay > minDays + 1) {
+                let pool = [];
+                for (let d = minDays + 1; d < secretDay; d++) {
+                    pool.push(d);
+                }
+                let maxFake = Math.min(2, pool.length);
+                if (maxFake > 0) {
+                    let numFake = Math.floor(Math.random() * (maxFake + 1));
+                    pool.sort(() => Math.random() - 0.5);
+                    fakeDays = pool.slice(0, numFake).sort((a, b) => a - b);
+                }
+            }
 
-  failBtn.addEventListener('click', function() {
-    // 從第 1 天重新開始，重新抽取
-    state.currentDay = 1;
-    state.teaseProbability = 0.8;
-    generateSecretAndFakes();
-    saveState();
-    setBackground(false);
-    enterDaily();
-  });
+            delayProb = 0.8;
+            saveState();
+            renderScreen();
+        });
 
-  restartBtn.addEventListener('click', function() {
-    clearState();
-    minDaysInput.value = 10;
-    maxDaysInput.value = 20;
-    photoPreview.innerHTML = '';
-    setBackground(false);
-    showScreen('setup');
-  });
+        // Next Day Button
+        nextDayBtn.addEventListener('click', () => {
+            currentDay++;
+            delayProb = 0.8;
+            saveState();
+            renderScreen();
+        });
 
-  // ========== 初始化 ==========
-  function init() {
-    if (loadState()) {
-      // 恢復進度
-      minDaysInput.value = state.minDays;
-      maxDaysInput.value = state.maxDays;
-      renderPhotoPreview();
+        // Restart Setup Buttons
+        restartSetupBtn.addEventListener('click', () => {
+            if (confirm('確定要放棄目前進度並重新開始嗎？')) {
+                clearState();
+                renderPreviews();
+                renderScreen();
+            }
+        });
 
-      // 判斷當前是否在特殊日
-      const day = state.currentDay;
-      if (day === state.secretDay || state.fakeDays.includes(day)) {
-        isRealClimax = (day === state.secretDay);
-        setBackground(true);
-        showScreen('climaxIntro');
-      } else {
-        enterDaily();
-      }
-    } else {
-      showScreen('setup');
-    }
-  }
+        endRestartBtn.addEventListener('click', () => {
+            clearState();
+            renderPreviews();
+            renderScreen();
+        });
 
-  init();
-})();
-</script>
+        // Start Countdown Button
+        startCountdownBtn.addEventListener('click', () => {
+            startCountdownBtn.classList.add('hidden');
+            subState = 'running';
+            remainingSeconds = 100;
+            delayProb = 0.8;
+            toastContainer.innerHTML = '';
+            timerDisplay.textContent = remainingSeconds;
+
+            if (countdownTimerId) clearInterval(countdownTimerId);
+
+            countdownTimerId = setInterval(() => {
+                remainingSeconds--;
+                timerDisplay.textContent = remainingSeconds;
+
+                // Check delay mechanism when remaining <= 3 seconds
+                if (remainingSeconds <= 3) {
+                    if (Math.random() < delayProb) {
+                        remainingSeconds += 20;
+                        delayProb *= 0.8;
+                        showToast(`⚠️ 觸發意志力考驗！倒數增加 20 秒 (目前機率: ${Math.round(delayProb * 100)}%)`);
+                        timerDisplay.textContent = remainingSeconds;
+                    }
+                }
+
+                if (remainingSeconds <= 0) {
+                    clearInterval(countdownTimerId);
+                    handleCountdownZero();
+                }
+            }, 1000);
+        });
+
+        function showToast(msg) {
+            toastContainer.innerHTML = `<div class="alert-toast">${msg}</div>`;
+        }
+
+        function handleCountdownZero() {
+            if (fakeDays.includes(currentDay)) {
+                timerDisplay.textContent = '0';
+                showToast('其實今天還不能完成喔');
+                setTimeout(() => {
+                    toastContainer.innerHTML = '';
+                    currentScreen = 'daily';
+                    subState = 'normal';
+                    saveState();
+                    renderScreen();
+                }, 3000);
+            } else if (currentDay === secretDay) {
+                timerDisplay.textContent = '完成！';
+                openSuccessModal();
+            }
+        }
+
+        // Success Modal Handling (5-second window)
+        function openSuccessModal() {
+            successModal.classList.remove('hidden');
+            modalRemaining = 5;
+            modalTimer.textContent = modalRemaining;
+
+            if (modalTimerId) clearInterval(modalTimerId);
+
+            modalTimerId = setInterval(() => {
+                modalRemaining--;
+                modalTimer.textContent = modalRemaining;
+
+                if (modalRemaining <= 0) {
+                    clearInterval(modalTimerId);
+                    closeSuccessModal();
+                    handleFailure();
+                }
+            }, 1000);
+        }
+
+        function closeSuccessModal() {
+            successModal.classList.add('hidden');
+            if (modalTimerId) clearInterval(modalTimerId);
+        }
+
+        successBtn.addEventListener('click', () => {
+            closeSuccessModal();
+            currentScreen = 'success';
+            clearStateKeepSuccess();
+            renderScreen();
+        });
+
+        failBtn.addEventListener('click', () => {
+            closeSuccessModal();
+            handleFailure();
+        });
+
+        function handleFailure() {
+            alert('挑戰失敗！將從第 1 天重新開始。');
+            currentDay = 1;
+            secretDay = Math.floor(Math.random() * (maxDays - minDays + 1)) + minDays;
+            fakeDays = [];
+            if (secretDay > minDays + 1) {
+                let pool = [];
+                for (let d = minDays + 1; d < secretDay; d++) {
+                    pool.push(d);
+                }
+                let maxFake = Math.min(2, pool.length);
+                if (maxFake > 0) {
+                    let numFake = Math.floor(Math.random() * (maxFake + 1));
+                    pool.sort(() => Math.random() - 0.5);
+                    fakeDays = pool.slice(0, numFake).sort((a, b) => a - b);
+                }
+            }
+            delayProb = 0.8;
+            currentScreen = 'daily';
+            subState = 'normal';
+            saveState();
+            renderScreen();
+        }
+
+        function clearStateKeepSuccess() {
+            localStorage.removeItem(STORAGE_KEY);
+            isStarted = true;
+            currentScreen = 'success';
+        }
+
+        // Render Screen Logic
+        function renderScreen() {
+            setupScreen.classList.add('hidden');
+            dailyScreen.classList.add('hidden');
+            countdownScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            successModal.classList.add('hidden');
+
+            if (countdownTimerId) {
+                clearInterval(countdownTimerId);
+                countdownTimerId = null;
+            }
+            if (modalTimerId) {
+                clearInterval(modalTimerId);
+                modalTimerId = null;
+            }
+
+            if (!isStarted || currentScreen === 'setup') {
+                setupScreen.classList.remove('hidden');
+                setRandomBackground(false);
+                return;
+            }
+
+            if (currentScreen === 'success') {
+                endScreen.classList.remove('hidden');
+                setRandomBackground(true);
+                return;
+            }
+
+            const isCompletionDay = (currentDay === secretDay || fakeDays.includes(currentDay));
+
+            if (isCompletionDay) {
+                currentScreen = 'countdown';
+                countdownScreen.classList.remove('hidden');
+                startCountdownBtn.classList.remove('hidden');
+                toastContainer.innerHTML = '';
+                timerDisplay.textContent = '100';
+                
+                if (currentDay === secretDay) {
+                    countdownTitle.textContent = '真正完成日';
+                    countdownDesc.textContent = '恭喜你堅持到了這天！請完成最後的意志力考驗。';
+                } else {
+                    countdownTitle.textContent = '模擬完成日';
+                    countdownDesc.textContent = '恭喜你堅持到了這天！請通過考驗。';
+                }
+                setRandomBackground(true);
+            } else {
+                currentScreen = 'daily';
+                dailyScreen.classList.remove('hidden');
+                dayDisplay.textContent = `第 ${currentDay} 天`;
+                dayStatus.textContent = '今天必須繼續堅持';
+                setRandomBackground(false);
+            }
+        }
+
+        function setRandomBackground(isSpecial) {
+            if (isSpecial && photos && photos.length > 0) {
+                const randomPhoto = photos[Math.floor(Math.random() * photos.length)];
+                bgContainer.style.backgroundImage = `url(${randomPhoto})`;
+            } else {
+                bgContainer.style.backgroundImage = 'none';
+            }
+        }
+
+        // LocalStorage functions
+        function saveState() {
+            const state = {
+                minDays,
+                maxDays,
+                secretDay,
+                currentDay,
+                fakeDays,
+                photos,
+                isStarted,
+                delayProb,
+                currentScreen
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const state = JSON.parse(saved);
+                    minDays = state.minDays || 10;
+                    maxDays = state.maxDays || 20;
+                    secretDay = state.secretDay || 15;
+                    currentDay = state.currentDay || 1;
+                    fakeDays = state.fakeDays || [];
+                    photos = state.photos || [];
+                    isStarted = state.isStarted || false;
+                    delayProb = state.delayProb !== undefined ? state.delayProb : 0.8;
+                    currentScreen = state.currentScreen || 'daily';
+
+                    minDaysInput.value = minDays;
+                    maxDaysInput.value = maxDays;
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        }
+
+        function clearState() {
+            localStorage.removeItem(STORAGE_KEY);
+            isStarted = false;
+            currentDay = 1;
+            secretDay = 0;
+            fakeDays = [];
+            photos = [];
+            currentScreen = 'setup';
+        }
+    </script>
 </body>
 </html>
