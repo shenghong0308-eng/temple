@@ -67,13 +67,15 @@
       background: #090909 center / cover no-repeat;
       transition: background-image .35s;
     }
-    .background::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,.76);
-      backdrop-filter: blur(2px);
-    }
+    /* 完成日：照片更明亮、清晰 */
+    .background.completion-bg {
+        filter: brightness(1.25);
+}
+
+.background.completion-bg::after {
+  background: rgba(0, 0, 0, 0.30);
+  backdrop-filter: blur(0px);
+}
     .topbar {
       width: 100%;
       padding: 23px clamp(20px, 5vw, 64px);
