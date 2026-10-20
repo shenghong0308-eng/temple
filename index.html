@@ -1,1204 +1,305 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#090909">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>長期堅持挑戰</title>
 <style>
-:root {
-  color-scheme: dark;
-  --red: #e32636;
-  --red-hover: #ff394a;
-  --panel: rgba(18,18,18,.91);
-  --text: #f5f5f5;
-  --muted: #a3a3a3;
-  --border: rgba(255,255,255,.13);
-  --bg-brightness: .85;
-  --overlay-opacity: .45;
-}
-
-* {
-  box-sizing: border-box;
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-html, body {
-  margin: 0;
-  min-height: 100%;
-  background: #090909;
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-    "Noto Sans TC", "PingFang TC", sans-serif;
-}
-
-body { min-height: 100dvh; overflow-x: hidden; }
-button, input { font: inherit; }
-button { cursor: pointer; transition: background .2s, transform .2s; }
-button:active { transform: scale(.98); }
-button:disabled { cursor: not-allowed; opacity: .45; }
-input[type="number"] { user-select: text; -webkit-user-select: text; }
-
-#app {
-  min-height: 100dvh;
-  position: relative;
-  isolation: isolate;
-  display: flex;
-  flex-direction: column;
-}
-
-.background {
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  background: #090909 center / cover no-repeat;
-  transition: background-image .35s;
-}
-
-.background::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,.76);
-  backdrop-filter: blur(2px);
-}
-
-/* 完成日／模擬完成日：圖片明亮且清晰 */
-.background.completion-bg {
-  filter: brightness(1.25);
-}
-
-.background.completion-bg::after {
-  background: rgba(0,0,0,.30);
-  backdrop-filter: blur(0);
-}
-
-/* 倒數畫面：移除所有遮罩及圖片濾鏡，確保圖片清晰 */
-.background.countdown-bg {
-  filter: none;
-}
-
-.background.countdown-bg::after {
-  background: transparent;
-  backdrop-filter: none;
-}
-
-/* 倒數時只顯示圖片和數字 */
-body.countdown-mode .topbar,
-body.countdown-mode main,
-body.countdown-mode .footer {
-  display: none !important;
-}
-
-#countdownOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 10;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  pointer-events: none;
-}
-
-body.countdown-mode #countdownOverlay {
-  display: flex;
-}
-
-#countdownOverlay .timer {
-  color: #fff;
-  font-size: clamp(100px, 24vw, 220px);
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  letter-spacing: -5px;
-  text-shadow: 0 3px 22px rgba(0,0,0,.75);
-}
-
-.topbar {
-  width: 100%;
-  padding: 23px clamp(20px,5vw,64px);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid rgba(255,255,255,.07);
-  gap: 12px;
-  position: relative;
-  z-index: 20;
-}
-
-.brand { font-size: 14px; font-weight: 800; letter-spacing: 3px; }
-.brand span { color: var(--red); }
-.status { font-size: 11px; letter-spacing: 2px; color: #aaa; }
-
-.interrupt-btn {
-  background: rgba(227,38,54,.14);
-  color: #ff6572;
-  border: 1px solid rgba(227,38,54,.65);
-  border-radius: 3px;
-  padding: 9px 12px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  white-space: nowrap;
-}
-.interrupt-btn:hover { background: rgba(227,38,54,.3); }
-
-main {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  padding: 40px 20px 64px;
-}
-
-.screen {
-  width: min(100%,510px);
-  animation: appear .4s ease both;
-}
-
-@keyframes appear {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.eyebrow {
-  color: var(--red);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 4px;
-  text-align: center;
-  margin-bottom: 18px;
-}
-
-h1 {
-  font-size: clamp(34px,8vw,53px);
-  line-height: 1.2;
-  letter-spacing: 2px;
-  text-align: center;
-  margin: 0;
-  font-weight: 900;
-}
-
-.subtitle {
-  color: var(--muted);
-  text-align: center;
-  line-height: 1.9;
-  font-size: 13px;
-  margin: 20px 0 34px;
-}
-
-.panel {
-  border: 1px solid var(--border);
-  background: var(--panel);
-  backdrop-filter: blur(16px);
-  padding: clamp(22px,5vw,34px);
-  border-radius: 5px;
-  box-shadow: 0 24px 80px rgba(0,0,0,.2);
-}
-
-.field-label {
-  display: block;
-  font-size: 12px;
-  font-weight: 700;
-  margin-bottom: 10px;
-  color: #ddd;
-  letter-spacing: 1px;
-}
-
-.range-fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 25px;
-}
-
-.input-wrap input {
-  width: 100%;
-  height: 49px;
-  border: 1px solid #383838;
-  background: #101010;
-  border-radius: 3px;
-  padding: 0 14px;
-  outline: none;
-  color: white;
-  font-size: 17px;
-}
-
-.input-wrap input:focus { border-color: var(--red); }
-
-.upload-box {
-  border: 1px dashed #484848;
-  background: rgba(255,255,255,.02);
-  padding: 19px 14px;
-  text-align: center;
-  border-radius: 4px;
-  margin-bottom: 10px;
-}
-
-.upload-box label {
-  cursor: pointer;
-  display: block;
-  color: white;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.upload-box input { display: none; }
-.upload-box p { color: var(--muted); font-size: 11px; margin: 8px 0 0; }
-
-.photo-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 10px 0 24px;
-}
-
-.photo-thumb {
-  width: 58px;
-  height: 58px;
-  border-radius: 3px;
-  border: 1px solid #444;
-  object-fit: cover;
-}
-
-.photo-count { align-self: center; font-size: 11px; color: var(--muted); }
-
-.btn {
-  min-height: 51px;
-  padding: 14px 20px;
-  border-radius: 3px;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 1.5px;
-}
-
-.btn-primary { width: 100%; background: var(--red); color: white; }
-.btn-primary:hover { background: var(--red-hover); }
-.btn-secondary { background: #242424; color: white; border: 1px solid #444; }
-.btn-secondary:hover { background: #333; }
-
-.error { color: #ff737e; font-size: 12px; margin: 12px 0 0; line-height: 1.7; }
-
-.day-number {
-  font-size: clamp(68px,16vw,110px);
-  line-height: 1;
-  text-align: center;
-  font-weight: 900;
-  letter-spacing: -3px;
-  margin: 20px 0;
-}
-
-.day-number small { font-size: 21px; letter-spacing: 2px; color: #ddd; margin-left: 8px; }
-
-.progress-track { height: 3px; background: #303030; margin: 27px 0 34px; overflow: hidden; }
-.progress-fill { height: 100%; background: var(--red); transition: width .35s; }
-
-.message {
-  text-align: center;
-  font-size: clamp(18px,4vw,23px);
-  font-weight: 800;
-  line-height: 1.7;
-  margin: 20px 0 12px;
-}
-
-.hint { color: var(--muted); text-align: center; font-size: 12px; line-height: 1.9; margin: 12px 0 28px; }
-.center { text-align: center; }
-
-.success-mark {
-  width: 70px;
-  height: 70px;
-  border: 2px solid var(--red);
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  margin: 0 auto 28px;
-  font-size: 29px;
-  color: var(--red);
-}
-
-.footer { color: #666; font-size: 10px; letter-spacing: 2px; text-align: center; padding: 0 20px 20px; }
-.hidden { display: none !important; }
-.action-stack { display: grid; gap: 12px; }
-.small-note { color: #777; font-size: 10px; text-align: center; line-height: 1.8; margin-top: 20px; }
-
-@media (max-width: 420px) {
-  .topbar { padding: 16px 14px; }
-  .brand { font-size: 11px; letter-spacing: 2px; }
-  .interrupt-btn { padding: 8px 9px; font-size: 10px; }
-  main { padding: 28px 16px 44px; }
-  .panel { padding: 22px 18px; }
-  .range-fields { gap: 10px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
-}
+*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;height:100%;background:#0a0a0a;color:#f2f2f2;font-family:-apple-system,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+#bg{position:fixed;inset:0;background:#0a0a0a center/cover no-repeat;z-index:0}
+#bg.on::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.65)}
+.screen{position:relative;z-index:1;min-height:100%;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:20px}
+.screen.show{display:flex}
+h1{margin:0;font-size:clamp(28px,6vw,44px);color:#e11d2e;letter-spacing:2px}
+h2{margin:0;font-size:clamp(22px,5vw,34px)}
+.big{font-size:clamp(64px,18vw,140px);font-weight:800;color:#e11d2e;line-height:1;font-variant-numeric:tabular-nums}
+p{margin:0;font-size:clamp(16px,3.5vw,22px);line-height:1.6;color:#ddd}
+.card{width:100%;max-width:440px;background:rgba(20,20,20,.85);border:1px solid #3a0a0f;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:16px;text-align:left}
+label{font-size:15px;color:#bbb;display:flex;flex-direction:column;gap:6px}
+input[type=number]{-webkit-user-select:text;user-select:text;background:#111;border:1px solid #444;color:#fff;border-radius:8px;padding:12px;font-size:18px;width:100%}
+input[type=number]:focus{outline:none;border-color:#e11d2e}
+.row{display:flex;gap:12px}.row label{flex:1}
+button,.filebtn{background:#e11d2e;color:#fff;border:0;border-radius:10px;padding:14px 28px;font-size:18px;font-weight:700;cursor:pointer;transition:.15s;text-align:center}
+button:hover,.filebtn:hover{background:#ff2b3f}button:active{transform:scale(.97)}
+button.ghost,.filebtn{background:transparent;border:1px solid #e11d2e;color:#ff5b69}
+button.ghost:hover,.filebtn:hover{background:#2a0a0e}
+.btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+#thumbs{display:flex;flex-wrap:wrap;gap:6px}
+#thumbs img{width:52px;height:52px;object-fit:cover;border-radius:6px;border:1px solid #555;-webkit-user-drag:none}
+.err{color:#ff5b69;font-size:14px;min-height:18px}
+.small{font-size:14px;color:#888}
 </style>
 </head>
 <body>
-<div id="app">
-  <div class="background" id="background"></div>
+<div id="bg"></div>
 
-  <header class="topbar">
-    <div class="brand">LONG<span>.</span> COMMITMENT</div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <div class="status" id="topStatus">SELF DISCIPLINE</div>
-      <button class="interrupt-btn" id="interruptBtn" type="button">中斷挑戰</button>
+<!-- 設定 -->
+<section class="screen" id="s-setup">
+  <h1>長期堅持挑戰</h1>
+  <div class="card">
+    <div class="row">
+      <label>最小天數<input type="number" id="min" value="10" min="1"></label>
+      <label>最大天數<input type="number" id="max" value="20" min="1"></label>
     </div>
-  </header>
+    <label>背景照片（可多選，完成日時隨機顯示）
+      <span class="filebtn" id="pickBtn">選擇照片</span>
+      <input type="file" id="files" accept="image/*" multiple hidden>
+    </label>
+    <div id="thumbs"></div>
+    <div class="err" id="err"></div>
+    <button id="start">開始挑戰</button>
+  </div>
+</section>
 
-  <main>
-    <section id="setupScreen" class="screen">
-      <div class="eyebrow">THE LONG GAME</div>
-      <h1>長期堅持挑戰</h1>
-      <p class="subtitle">真正的堅持，不是知道終點在哪裡。<br>而是不知道終點，依然選擇繼續。</p>
-      <div class="panel">
-        <div class="field-label">設定你的挑戰區間（天）</div>
-        <div class="range-fields">
-          <div class="input-wrap">
-            <label class="field-label" for="minDays">最小天數</label>
-            <input id="minDays" type="number" min="1" max="3650" value="10">
-          </div>
-          <div class="input-wrap">
-            <label class="field-label" for="maxDays">最大天數</label>
-            <input id="maxDays" type="number" min="1" max="3650" value="20">
-          </div>
-        </div>
-        <div class="field-label">挑戰照片（選填）</div>
-        <div class="upload-box">
-          <label for="photoInput">＋　上傳背景照片
-            <input id="photoInput" type="file" accept="image/*" multiple>
-          </label>
-          <p>完成日將隨機展示一張照片</p>
-        </div>
-        <div id="photoList" class="photo-list"></div>
-        <button id="startBtn" class="btn btn-primary">開始挑戰　→</button>
-        <p id="setupError" class="error hidden"></p>
-        <p class="small-note">進度將自動保存在此瀏覽器中。請勿清除網站資料。</p>
-      </div>
-    </section>
+<!-- 日常 -->
+<section class="screen" id="s-day">
+  <p>挑戰進行中</p>
+  <h2>第</h2>
+  <div class="big" id="dayNum">1</div>
+  <h2>天</h2>
+  <p id="dayMsg">今天必須繼續堅持</p>
+  <button id="next">下一天</button>
+</section>
 
-    <section id="dailyScreen" class="screen hidden">
-      <div class="eyebrow">KEEP GOING</div>
-      <h1>堅持，直到最後。</h1>
-      <div class="panel" style="margin-top:30px">
-        <div class="day-number"><span id="dayValue">1</span><small>DAY</small></div>
-        <div class="progress-track"><div id="progressFill" class="progress-fill" style="width:0%"></div></div>
-        <p class="message">今天必須繼續堅持</p>
-        <p class="hint">不猜測終點，不急著抵達。<br>把今天做好，就是今天唯一的任務。</p>
-        <button id="nextDayBtn" class="btn btn-primary">下一天　→</button>
-      </div>
-    </section>
+<!-- 完成日 / 模擬完成日 -->
+<section class="screen" id="s-done">
+  <p>第 <span id="doneDay"></span> 天</p>
+  <h2>恭喜你堅持到了這天</h2>
+  <button id="cdStart">開始倒數</button>
+</section>
 
-    <section id="countdownReadyScreen" class="screen hidden">
-      <div class="eyebrow">A MOMENT OF TRUTH</div>
-      <h1>恭喜你堅持到了這天</h1>
-      <p class="subtitle">你已經走到一個重要的時刻。<br>但在時間結束之前，先不要急著下結論。</p>
-      <div class="panel">
-        <div class="success-mark">!</div>
-        <p class="message">你準備好了嗎？</p>
-        <p class="hint">接下來將進入 100 秒倒數。<br>保持冷靜，等待最後的結果。</p>
-        <button id="beginCountdownBtn" class="btn btn-primary">開始倒數　→</button>
-      </div>
-    </section>
+<section class="screen" id="s-count">
+  <p>倒數中</p>
+  <div class="big" id="cdNum">100</div>
+</section>
 
-    <section id="countdownScreen" class="screen hidden"></section>
+<section class="screen" id="s-fake">
+  <h2>其實今天還不能完成喔</h2>
+  <p>繼續堅持下去……</p>
+</section>
 
-    <section id="resultScreen" class="screen hidden">
-      <div class="eyebrow">THE MOMENT</div>
-      <h1 id="resultHeading">完成！</h1>
-      <p id="resultSubtitle" class="subtitle">你已經來到這個時刻。</p>
-      <div class="panel center">
-        <div class="success-mark" id="resultMark">✓</div>
-        <p class="message" id="resultMessage">完成！</p>
-        <p class="hint" id="resultHint"></p>
-        <div id="resultActions" class="action-stack"></div>
-      </div>
-    </section>
+<section class="screen" id="s-win">
+  <h1>完成！</h1>
+  <div class="big" id="winNum">5</div>
+</section>
 
-    <section id="endScreen" class="screen hidden">
-      <div class="eyebrow">MISSION COMPLETE</div>
-      <div class="success-mark">✓</div>
-      <h1>挑戰成功</h1>
-      <p class="subtitle">你沒有提前知道終點，<br>卻一步一步走到了這裡。</p>
-      <div class="panel center">
-        <p class="message">你做到了。</p>
-        <p class="hint">真正的成就，是你願意堅持到最後。</p>
-        <button id="restartBtn" class="btn btn-primary">重新開始挑戰　↻</button>
-      </div>
-    </section>
-  </main>
+<section class="screen" id="s-ask">
+  <h2>你是否成功達成？</h2>
+  <div class="btns">
+    <button id="yes">成功</button>
+    <button class="ghost" id="no">失敗</button>
+  </div>
+</section>
 
-  <footer class="footer">ONE DAY AT A TIME · NEVER GIVE UP</footer>
-</div>
-
-<!-- 倒數期間只顯示這個數字及背景圖片 -->
-<div id="countdownOverlay" aria-live="off">
-  <div class="timer" id="timerValue">100</div>
-</div>
+<section class="screen" id="s-end">
+  <h1>挑戰成功</h1>
+  <p>你完成了長期堅持挑戰，意志力無人能擋。</p>
+  <button id="restart">重新開始</button>
+</section>
 
 <script>
-(() => {
-  "use strict";
+(function(){
+  var KEY = 'longChallengeState_v1';
+  var $ = function(id){ return document.getElementById(id); };
+  var screens = ['setup','day','done','count','fake','win','ask','end'];
+  var state = null;           // 持久化資料
+  var photos = [];            // 設定畫面暫存照片
+  var timer = null;           // 目前計時器
+  var currentBg = null;
 
-  const STORAGE_KEY = "longCommitmentChallenge_v2";
-  const $ = id => document.getElementById(id);
-  const screens = [
-    "setupScreen", "dailyScreen", "countdownReadyScreen",
-    "countdownScreen", "resultScreen", "endScreen"
-  ];
+  function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
 
-  const state = {
-    minDays: 10,
-    maxDays: 20,
-    secretDay: null,
-    currentDay: 1,
-    fakeDays: [],
-    photos: [],
-    started: false,
-    phase: "setup",
-    countdownRemaining: 100,
-    countdownDeadline: null,
-    delayProbability: .8,
-    delayCount: 0,
-    timerId: null,
-    returnDeadline: null,
-    resultType: null,
-    usedPhoto: null,
-    runId: 0
+  function show(name){
+    screens.forEach(function(s){ $('s-'+s).classList.toggle('show', s===name); });
+    var useBg = ['done','count','fake','win','ask'].indexOf(name) >= 0 && currentBg;
+    var bg = $('bg');
+    bg.classList.toggle('on', !!useBg);
+    bg.style.backgroundImage = useBg ? 'url("'+currentBg+'")' : 'none';
+  }
+
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify(state)); }
+    catch(e){
+      // 容量不足時，嘗試不含照片保存進度
+      try { var c = Object.assign({}, state, {photos: []}); localStorage.setItem(KEY, JSON.stringify(c)); } catch(e2){}
+    }
+  }
+  function load(){
+    try { var r = localStorage.getItem(KEY); return r ? JSON.parse(r) : null; } catch(e){ return null; }
+  }
+  function clearSave(){ try { localStorage.removeItem(KEY); } catch(e){} }
+
+  function stopTimer(){ if(timer){ clearInterval(timer); clearTimeout(timer); timer = null; } }
+
+  function plan(min,max){
+    var secret = rnd(min,max);
+    var cands = [];
+    for(var d=min+1; d<secret; d++) cands.push(d);
+    var n = Math.min(rnd(0,2), cands.length), fakes = [];
+    while(n-- > 0){
+      var i = rnd(0,cands.length-1);
+      fakes.push(cands.splice(i,1)[0]);
+    }
+    fakes.sort(function(a,b){return a-b;});
+    return {secret:secret, fakes:fakes};
+  }
+
+  function pickBg(){
+    var p = state && state.photos || [];
+    currentBg = p.length ? p[rnd(0,p.length-1)] : null;
+  }
+
+  // ---------- 設定 ----------
+  $('pickBtn').onclick = function(){ $('files').click(); };
+  $('files').onchange = function(e){
+    var list = Array.prototype.slice.call(e.target.files);
+    list.forEach(function(f){
+      var fr = new FileReader();
+      fr.onload = function(){
+        var img = new Image();
+        img.onload = function(){
+          var max = 1280, w = img.width, h = img.height, s = Math.min(1, max/Math.max(w,h));
+          var c = document.createElement('canvas');
+          c.width = Math.round(w*s); c.height = Math.round(h*s);
+          c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+          photos.push(c.toDataURL('image/jpeg',0.75));
+          renderThumbs();
+        };
+        img.src = fr.result;
+      };
+      fr.readAsDataURL(f);
+    });
+    e.target.value = '';
+  };
+  function renderThumbs(){
+    $('thumbs').innerHTML = '';
+    photos.forEach(function(src,i){
+      var im = document.createElement('img');
+      im.src = src; im.title = '點擊移除';
+      im.onclick = function(){ photos.splice(i,1); renderThumbs(); };
+      $('thumbs').appendChild(im);
+    });
+  }
+
+  $('start').onclick = function(){
+    var min = parseInt($('min').value,10), max = parseInt($('max').value,10);
+    if(!(min>=1) || !(max>=1)){ $('err').textContent = '請輸入有效的天數（至少 1 天）'; return; }
+    if(min>max){ $('err').textContent = '最小天數不可大於最大天數'; return; }
+    $('err').textContent = '';
+    var p = plan(min,max);
+    state = {min:min, max:max, secret:p.secret, day:1, fakes:p.fakes, photos:photos.slice(), started:true};
+    save();
+    enterDay();
   };
 
-  let saveWarningShown = false;
+  // ---------- 每日 ----------
+  function isReal(){ return state.day === state.secret; }
+  function isFake(){ return state.fakes.indexOf(state.day) >= 0; }
 
-  function randomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-
-  function save() {
-    const data = {
-      minDays: state.minDays,
-      maxDays: state.maxDays,
-      secretDay: state.secretDay,
-      currentDay: state.currentDay,
-      fakeDays: state.fakeDays,
-      photos: state.photos,
-      started: state.started,
-      phase: state.phase,
-      countdownRemaining: state.countdownRemaining,
-      countdownDeadline: state.countdownDeadline,
-      delayProbability: state.delayProbability,
-      delayCount: state.delayCount,
-      returnDeadline: state.returnDeadline,
-      resultType: state.resultType,
-      usedPhoto: state.usedPhoto
-    };
-
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      saveWarningShown = false;
-    } catch (error) {
-      console.warn("無法儲存挑戰資料：", error);
-      if (!saveWarningShown) {
-        saveWarningShown = true;
-        $("setupError").textContent =
-          "瀏覽器儲存空間不足，請減少照片數量或使用較小的圖片。";
-        $("setupError").classList.remove("hidden");
-      }
-    }
-  }
-
-  function clearTimer() {
-    if (state.timerId !== null) {
-      clearInterval(state.timerId);
-      state.timerId = null;
-    }
-  }
-
-  function showScreen(id) {
-    screens.forEach(screenId => {
-      $(screenId).classList.toggle("hidden", screenId !== id);
-    });
-
-    const labels = {
-      setupScreen: "SELF DISCIPLINE",
-      dailyScreen: "CHALLENGE ACTIVE",
-      countdownReadyScreen: "A MOMENT OF TRUTH",
-      countdownScreen: "COUNTDOWN ACTIVE",
-      resultScreen: "THE MOMENT",
-      endScreen: "MISSION COMPLETE"
-    };
-    $("topStatus").textContent = labels[id] || "SELF DISCIPLINE";
-  }
-
-  function setCountdownMode(enabled) {
-    document.body.classList.toggle("countdown-mode", enabled);
-    const bg = $("background");
-    bg.classList.toggle("countdown-bg", enabled);
-
-    if (enabled) {
-      // Countdown mode has no tint, blur, filter or overlay.
-      bg.classList.remove("completion-bg");
-    }
-  }
-
-  function setBackground(imageData, mode = "normal") {
-    const bg = $("background");
-
-    bg.classList.remove("completion-bg", "countdown-bg");
-    bg.style.backgroundImage = imageData
-      ? `url("${imageData}")`
-      : "none";
-
-    if (mode === "completion") bg.classList.add("completion-bg");
-    if (mode === "countdown") bg.classList.add("countdown-bg");
-  }
-
-  function randomBackground() {
-    if (state.photos.length === 0) {
-      state.usedPhoto = null;
-      setBackground(null, "completion");
-      save();
-      return;
-    }
-
-    state.usedPhoto = state.photos[
-      randomInt(0, state.photos.length - 1)
-    ];
-
-    setBackground(state.usedPhoto, "completion");
-    save();
-  }
-
-  function revokePhotoPreviews() {
-    state.photoPreviewUrls.forEach(url => URL.revokeObjectURL(url));
-    state.photoPreviewUrls = [];
-  }
-
-  function renderPhotoPreviews() {
-    const container = $("photoList");
-    container.replaceChildren();
-
-    state.photoPreviewUrls.forEach((url, index) => {
-      const img = document.createElement("img");
-      img.src = url;
-      img.alt = `背景照片 ${index + 1}`;
-      img.className = "photo-thumb";
-      container.appendChild(img);
-    });
-
-    if (state.photos.length > 0) {
-      const count = document.createElement("span");
-      count.className = "photo-count";
-      count.textContent = `已選擇 ${state.photos.length} 張`;
-      container.appendChild(count);
-    }
-  }
-
-  function fileToDataURL(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error("圖片讀取失敗"));
-      reader.readAsDataURL(file);
-    });
-  }
-
-  function resizeImage(source) {
-    return new Promise((resolve, reject) => {
-      const image = new Image();
-      image.onload = () => {
-        const maxSide = 1200;
-        const ratio = Math.min(
-          1, maxSide / Math.max(image.width, image.height)
-        );
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.max(1, Math.round(image.width * ratio));
-        canvas.height = Math.max(1, Math.round(image.height * ratio));
-
-        const context = canvas.getContext("2d");
-        if (!context) {
-          reject(new Error("無法處理圖片"));
-          return;
-        }
-
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", .88));
-      };
-      image.onerror = () => reject(new Error("無法載入圖片"));
-      image.src = source;
-    });
-  }
-
-  $("photoInput").addEventListener("change", async event => {
-    const files = Array.from(event.target.files || []);
-    if (!files.length) return;
-
-    const validFiles = files.filter(file => file.type.startsWith("image/"));
-    if (validFiles.length !== files.length) {
-      $("setupError").textContent = "部分檔案不是圖片，已略過。";
-      $("setupError").classList.remove("hidden");
+  function enterDay(){
+    stopTimer();
+    if(isReal() || isFake()){
+      pickBg();
+      $('doneDay').textContent = state.day;
+      show('done');
     } else {
-      $("setupError").classList.add("hidden");
+      currentBg = null;
+      $('dayNum').textContent = state.day;
+      show('day');
     }
-
-    try {
-      const converted = await Promise.all(validFiles.map(async file => {
-        return resizeImage(await fileToDataURL(file));
-      }));
-
-      state.photos = converted;
-      revokePhotoPreviews();
-      state.photoPreviewUrls = state.photos.slice();
-      renderPhotoPreviews();
-      save();
-    } catch (error) {
-      $("setupError").textContent = "圖片處理失敗，請換一張照片再試。";
-      $("setupError").classList.remove("hidden");
-    }
-
-    event.target.value = "";
-  });
-
-  function generateFakeDays() {
-    const possibleDays = [];
-
-    for (
-      let day = state.minDays + 1;
-      day < state.secretDay;
-      day++
-    ) {
-      possibleDays.push(day);
-    }
-
-    const count = possibleDays.length === 0
-      ? 0
-      : randomInt(0, Math.min(2, possibleDays.length));
-
-    state.fakeDays = [];
-    for (let i = 0; i < count; i++) {
-      const index = randomInt(0, possibleDays.length - 1);
-      state.fakeDays.push(possibleDays.splice(index, 1)[0]);
-    }
-
-    state.fakeDays.sort((a, b) => a - b);
   }
-
-  function beginNewChallenge(minDays, maxDays) {
-    clearTimer();
-    setCountdownMode(false);
-    state.runId++;
-
-    state.minDays = minDays;
-    state.maxDays = maxDays;
-    state.secretDay = randomInt(minDays, maxDays);
-    state.currentDay = 1;
-    state.started = true;
-    state.phase = "daily";
-    state.countdownRemaining = 100;
-    state.countdownDeadline = null;
-    state.delayProbability = .8;
-    state.delayCount = 0;
-    state.returnDeadline = null;
-    state.resultType = null;
-    state.usedPhoto = null;
-
-    generateFakeDays();
-    setBackground(null);
+  $('next').onclick = function(){
+    state.day++;
     save();
-    renderDaily();
-  }
+    enterDay();
+  };
 
-  $("startBtn").addEventListener("click", () => {
-    const minDays = Number($("minDays").value);
-    const maxDays = Number($("maxDays").value);
+  // ---------- 倒數 ----------
+  $('cdStart').onclick = function(){
+    var remain = 100, prob = 0.8;
+    $('cdNum').textContent = remain;
+    show('count');
+    stopTimer();
+    timer = setInterval(function(){
+      remain--;
+      if(remain === 3){
+        if(Math.random() < prob){
+          remain += 20;
+          prob *= 0.8;
+        }
+      }
+      $('cdNum').textContent = Math.max(remain,0);
+      if(remain <= 0){
+        stopTimer();
+        finishCountdown();
+      }
+    }, 1000);
+  };
 
-    if (
-      !Number.isInteger(minDays) ||
-      !Number.isInteger(maxDays) ||
-      minDays < 1 ||
-      maxDays < minDays ||
-      maxDays > 3650
-    ) {
-      $("setupError").textContent =
-        "請輸入有效天數：最小天數至少為 1，最大天數須大於或等於最小天數，且不可超過 3650 天。";
-      $("setupError").classList.remove("hidden");
-      return;
-    }
-
-    $("setupError").classList.add("hidden");
-    beginNewChallenge(minDays, maxDays);
-  });
-
-  function renderDaily() {
-    clearTimer();
-    setCountdownMode(false);
-    state.phase = "daily";
-    state.countdownDeadline = null;
-    state.returnDeadline = null;
-    state.resultType = null;
-
-    setBackground(null);
-    $("dayValue").textContent = state.currentDay;
-
-    const percentage = Math.min(
-      100,
-      ((state.currentDay - 1) / Math.max(1, state.maxDays - 1)) * 100
-    );
-    $("progressFill").style.width = `${percentage}%`;
-
-    showScreen("dailyScreen");
-    save();
-  }
-
-  function advanceDay() {
-    if (!state.started || state.phase !== "daily") return;
-
-    state.currentDay++;
-
-    if (state.currentDay === state.secretDay) {
-      save();
-      enterCompletion("real");
-    } else if (state.fakeDays.includes(state.currentDay)) {
-      save();
-      enterCompletion("fake");
+  function finishCountdown(){
+    if(isReal()){
+      var t = 5;
+      $('winNum').textContent = t;
+      show('win');
+      timer = setInterval(function(){
+        t--;
+        $('winNum').textContent = Math.max(t,0);
+        if(t <= 0){ stopTimer(); show('ask'); }
+      }, 1000);
     } else {
-      save();
-      renderDaily();
+      show('fake');
+      timer = setTimeout(function(){
+        timer = null;
+        // 這個模擬完成日已結束，移除後回到日常畫面
+        state.fakes = state.fakes.filter(function(d){ return d !== state.day; });
+        save();
+        currentBg = null;
+        $('dayNum').textContent = state.day;
+        show('day');
+      }, 4000);
     }
   }
 
-  $("nextDayBtn").addEventListener("click", advanceDay);
-
-  function enterCompletion(type) {
-    clearTimer();
-    setCountdownMode(false);
-
-    state.phase = "ready";
-    state.resultType = type;
-    state.countdownRemaining = 100;
-    state.countdownDeadline = null;
-    state.delayProbability = .8;
-    state.delayCount = 0;
-    state.returnDeadline = null;
-
-    randomBackground();
+  // ---------- 結果 ----------
+  $('yes').onclick = function(){
+    stopTimer();
+    clearSave();
+    state = null;
+    currentBg = null;
+    show('end');
+  };
+  $('no').onclick = function(){
+    var p = plan(state.min, state.max);
+    state.secret = p.secret; state.fakes = p.fakes; state.day = 1;
     save();
-    showScreen("countdownReadyScreen");
+    enterDay();
+  };
+  $('restart').onclick = function(){
+    stopTimer();
+    clearSave();
+    state = null; photos = []; currentBg = null;
+    renderThumbs();
+    show('setup');
+  };
+
+  // ---------- 啟動：恢復進度 ----------
+  var saved = load();
+  if(saved && saved.started){
+    state = saved;
+    state.photos = state.photos || [];
+    state.fakes = state.fakes || [];
+    $('min').value = state.min; $('max').value = state.max;
+    enterDay();
+  } else {
+    show('setup');
   }
 
-  $("beginCountdownBtn").addEventListener("click", () => {
-    if (state.phase !== "ready") return;
-
-    state.phase = "countdown";
-    state.countdownRemaining = 100;
-    state.countdownDeadline = Date.now() + 100000;
-    state.delayProbability = .8;
-    state.delayCount = 0;
-
-    setCountdownMode(true);
-    showScreen("countdownScreen");
-    updateCountdownDisplay();
-    save();
-    runCountdown();
+  // 禁止文字選取與右鍵
+  document.addEventListener('selectstart', function(e){
+    if(!(e.target && e.target.tagName === 'INPUT')) e.preventDefault();
   });
-
-  function updateCountdownDisplay() {
-    const seconds = Math.max(0, Math.ceil(state.countdownRemaining));
-    $("timerValue").textContent = String(seconds).padStart(2, "0");
-  }
-
-  function runCountdown() {
-    clearTimer();
-    if (state.phase !== "countdown") return;
-
-    state.timerId = setInterval(() => {
-      if (state.phase !== "countdown") {
-        clearTimer();
-        return;
-      }
-
-      const remaining = Math.max(
-        0, (state.countdownDeadline - Date.now()) / 1000
-      );
-
-      state.countdownRemaining = remaining;
-      updateCountdownDisplay();
-
-      if (remaining <= 3) {
-        clearTimer();
-
-        if (Math.random() < state.delayProbability) {
-          // Every successful delay adds 20 seconds.
-          // Probability decreases multiplicatively: .8, .64, .512...
-          state.delayCount++;
-          state.delayProbability *= .8;
-          state.countdownRemaining = remaining + 20;
-          state.countdownDeadline =
-            Date.now() + state.countdownRemaining * 1000;
-
-          updateCountdownDisplay();
-          save();
-          runCountdown();
-        } else {
-          state.countdownRemaining = 0;
-          updateCountdownDisplay();
-          save();
-          onCountdownComplete();
-        }
-        return;
-      }
-
-      // Persist deadline and probability so refreshes do not reset the timer.
-      save();
-    }, 100);
-  }
-
-  function clearResultActions() {
-    $("resultActions").replaceChildren();
-  }
-
-  function onCountdownComplete() {
-    clearTimer();
-    state.countdownRemaining = 0;
-    state.countdownDeadline = null;
-    setCountdownMode(false);
-
-    if (state.resultType === "fake") {
-      state.phase = "fakeResult";
-      state.returnDeadline = Date.now() + 3500;
-      save();
-
-      $("resultHeading").textContent = "再等等";
-      $("resultSubtitle").textContent = "每一次等待，都是對自己的考驗。";
-      $("resultMark").textContent = "…";
-      $("resultMessage").textContent = "其實今天還不能完成喔";
-      $("resultHint").textContent = "挑戰還沒結束，繼續堅持下去。";
-      clearResultActions();
-      showScreen("resultScreen");
-      scheduleFakeReturn();
-      return;
-    }
-
-    state.phase = "realResult";
-    state.returnDeadline = Date.now() + 5000;
-    save();
-
-    $("resultHeading").textContent = "完成！";
-    $("resultSubtitle").textContent = "最後的時刻已經到來。";
-    $("resultMark").textContent = "✓";
-    $("resultMessage").textContent = "完成！";
-    $("resultHint").textContent = "請在 5 秒內確認是否成功達成。";
-    clearResultActions();
-
-    const confirmButton = document.createElement("button");
-    confirmButton.className = "btn btn-primary";
-    confirmButton.textContent = "我成功達成了";
-    confirmButton.addEventListener("click", () => {
-      if (state.phase !== "realResult") return;
-      finishChallenge();
-    });
-
-    const failButton = document.createElement("button");
-    failButton.className = "btn btn-secondary";
-    failButton.textContent = "我沒有成功";
-    failButton.addEventListener("click", () => {
-      if (state.phase !== "realResult") return;
-      restartAfterFailure();
-    });
-
-    $("resultActions").append(confirmButton, failButton);
-    showScreen("resultScreen");
-    runResultWindow();
-  }
-
-  function scheduleFakeReturn() {
-    clearTimer();
-    const runId = state.runId;
-
-    state.timerId = setInterval(() => {
-      if (state.runId !== runId || state.phase !== "fakeResult") {
-        clearTimer();
-        return;
-      }
-
-      if (Date.now() >= state.returnDeadline) {
-        clearTimer();
-        state.currentDay++;
-        renderDaily();
-      }
-    }, 100);
-  }
-
-  function runResultWindow() {
-    clearTimer();
-    const runId = state.runId;
-
-    state.timerId = setInterval(() => {
-      if (state.runId !== runId || state.phase !== "realResult") {
-        clearTimer();
-        return;
-      }
-
-      const remaining = state.returnDeadline - Date.now();
-
-      if (remaining <= 0) {
-        clearTimer();
-        restartAfterFailure();
-      } else {
-        $("resultHint").textContent =
-          `請在 ${Math.ceil(remaining / 1000)} 秒內確認是否成功達成。`;
-      }
-    }, 100);
-  }
-
-  function finishChallenge() {
-    clearTimer();
-    setCountdownMode(false);
-    localStorage.removeItem(STORAGE_KEY);
-
-    state.started = false;
-    state.phase = "end";
-    state.countdownDeadline = null;
-    state.returnDeadline = null;
-
-    setBackground(null);
-    showScreen("endScreen");
-  }
-
-  function restartAfterFailure() {
-    beginNewChallenge(state.minDays, state.maxDays);
-  }
-
-  // 中斷挑戰：不論目前位於哪個畫面，立即清除所有遊戲存檔、
-  // 秘密完成日、模擬完成日、已保存照片與目前計時器。
-  function interruptChallenge() {
-    const confirmed = window.confirm(
-      "確定要中斷挑戰嗎？\n\n這會清除所有進度、秘密完成日及已保存的照片，並回到主頁。此操作無法復原。"
-    );
-
-    if (!confirmed) return;
-
-    clearTimer();
-    state.runId++;
-    setCountdownMode(false);
-
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch (error) {
-      console.warn("清除存檔失敗：", error);
-    }
-
-    state.minDays = 10;
-    state.maxDays = 20;
-    state.secretDay = null;
-    state.currentDay = 1;
-    state.fakeDays = [];
-    state.photos = [];
-    state.started = false;
-    state.phase = "setup";
-    state.countdownRemaining = 100;
-    state.countdownDeadline = null;
-    state.delayProbability = .8;
-    state.delayCount = 0;
-    state.returnDeadline = null;
-    state.resultType = null;
-    state.usedPhoto = null;
-
-    revokePhotoPreviews();
-    renderPhotoPreviews();
-
-    $("minDays").value = 10;
-    $("maxDays").value = 20;
-    $("photoInput").value = "";
-    $("setupError").classList.add("hidden");
-
-    setBackground(null);
-    showScreen("setupScreen");
-  }
-
-  $("interruptBtn").addEventListener("click", interruptChallenge);
-
-  $("restartBtn").addEventListener("click", interruptChallenge);
-
-  function loadSavedState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return false;
-
-      const data = JSON.parse(raw);
-      if (
-        !data ||
-        !Number.isInteger(data.minDays) ||
-        !Number.isInteger(data.maxDays) ||
-        !Number.isInteger(data.secretDay) ||
-        !Number.isInteger(data.currentDay) ||
-        !Array.isArray(data.fakeDays) ||
-        !Array.isArray(data.photos) ||
-        data.minDays < 1 ||
-        data.maxDays < data.minDays ||
-        data.secretDay < data.minDays ||
-        data.secretDay > data.maxDays ||
-        data.currentDay < 1
-      ) {
-        localStorage.removeItem(STORAGE_KEY);
-        return false;
-      }
-
-      Object.assign(state, {
-        minDays: data.minDays,
-        maxDays: data.maxDays,
-        secretDay: data.secretDay,
-        currentDay: data.currentDay,
-        fakeDays: data.fakeDays.filter(day =>
-          Number.isInteger(day) &&
-          day > data.minDays &&
-          day < data.secretDay
-        ).slice(0, 2),
-        photos: data.photos.filter(photo =>
-          typeof photo === "string" && photo.startsWith("data:image/")
-        ),
-        started: Boolean(data.started),
-        phase: typeof data.phase === "string" ? data.phase : "daily",
-        countdownRemaining: Number.isFinite(data.countdownRemaining)
-          ? Math.max(0, data.countdownRemaining) : 100,
-        countdownDeadline: Number.isFinite(data.countdownDeadline)
-          ? data.countdownDeadline : null,
-        delayProbability: Number.isFinite(data.delayProbability)
-          ? Math.max(0, Math.min(1, data.delayProbability)) : .8,
-        delayCount: Number.isInteger(data.delayCount)
-          ? Math.max(0, data.delayCount) : 0,
-        returnDeadline: Number.isFinite(data.returnDeadline)
-          ? data.returnDeadline : null,
-        resultType: data.resultType === "fake" || data.resultType === "real"
-          ? data.resultType : null,
-        usedPhoto: typeof data.usedPhoto === "string" &&
-          data.usedPhoto.startsWith("data:image/")
-          ? data.usedPhoto : null
-      });
-
-      return state.started;
-    } catch (error) {
-      console.warn("恢復存檔失敗：", error);
-      return false;
-    }
-  }
-
-  function restorePhase() {
-    setBackground(state.usedPhoto,
-      state.phase === "ready" ? "completion" : "normal");
-
-    switch (state.phase) {
-      case "daily":
-        renderDaily();
-        break;
-
-      case "ready":
-        showScreen("countdownReadyScreen");
-        break;
-
-      case "countdown":
-        setCountdownMode(true);
-        showScreen("countdownScreen");
-
-        if (!state.countdownDeadline) {
-          state.countdownDeadline =
-            Date.now() + state.countdownRemaining * 1000;
-        }
-
-        if (state.countdownDeadline <= Date.now()) {
-          state.countdownRemaining = 0;
-          updateCountdownDisplay();
-          onCountdownComplete();
-        } else {
-          state.countdownRemaining =
-            (state.countdownDeadline - Date.now()) / 1000;
-          updateCountdownDisplay();
-          save();
-          runCountdown();
-        }
-        break;
-
-      case "fakeResult":
-        showScreen("resultScreen");
-        $("resultHeading").textContent = "再等等";
-        $("resultSubtitle").textContent = "每一次等待，都是對自己的考驗。";
-        $("resultMark").textContent = "…";
-        $("resultMessage").textContent = "其實今天還不能完成喔";
-        $("resultHint").textContent = "挑戰還沒結束，繼續堅持下去。";
-        clearResultActions();
-
-        if (!state.returnDeadline) {
-          state.returnDeadline = Date.now() + 3500;
-        }
-
-        if (state.returnDeadline <= Date.now()) {
-          state.currentDay++;
-          renderDaily();
-        } else {
-          save();
-          scheduleFakeReturn();
-        }
-        break;
-
-      case "realResult":
-        showScreen("resultScreen");
-        $("resultHeading").textContent = "完成！";
-        $("resultSubtitle").textContent = "最後的時刻已經到來。";
-        $("resultMark").textContent = "✓";
-        $("resultMessage").textContent = "完成！";
-        clearResultActions();
-
-        const confirmButton = document.createElement("button");
-        confirmButton.className = "btn btn-primary";
-        confirmButton.textContent = "我成功達成了";
-        confirmButton.addEventListener("click", () => {
-          if (state.phase === "realResult") finishChallenge();
-        });
-
-        const failButton = document.createElement("button");
-        failButton.className = "btn btn-secondary";
-        failButton.textContent = "我沒有成功";
-        failButton.addEventListener("click", () => {
-          if (state.phase === "realResult") restartAfterFailure();
-        });
-
-        $("resultActions").append(confirmButton, failButton);
-
-        if (!state.returnDeadline) {
-          state.returnDeadline = Date.now() + 5000;
-        }
-
-        if (state.returnDeadline <= Date.now()) {
-          restartAfterFailure();
-        } else {
-          save();
-          runResultWindow();
-        }
-        break;
-
-      default:
-        renderDaily();
-    }
-  }
-
-  function init() {
-    if (loadSavedState()) {
-      $("minDays").value = state.minDays;
-      $("maxDays").value = state.maxDays;
-      state.photoPreviewUrls = state.photos.slice();
-      renderPhotoPreviews();
-      restorePhase();
-    } else {
-      showScreen("setupScreen");
-    }
-  }
-
-  init();
+  document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 })();
 </script>
 </body>
