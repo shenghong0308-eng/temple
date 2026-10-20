@@ -1,305 +1,1397 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#090909">
 <title>長期堅持挑戰</title>
+
 <style>
-*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-html,body{margin:0;height:100%;background:#0a0a0a;color:#f2f2f2;font-family:-apple-system,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
-#bg{position:fixed;inset:0;background:#0a0a0a center/cover no-repeat;z-index:0}
-#bg.on::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.65)}
-.screen{position:relative;z-index:1;min-height:100%;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:20px}
-.screen.show{display:flex}
-h1{margin:0;font-size:clamp(28px,6vw,44px);color:#e11d2e;letter-spacing:2px}
-h2{margin:0;font-size:clamp(22px,5vw,34px)}
-.big{font-size:clamp(64px,18vw,140px);font-weight:800;color:#e11d2e;line-height:1;font-variant-numeric:tabular-nums}
-p{margin:0;font-size:clamp(16px,3.5vw,22px);line-height:1.6;color:#ddd}
-.card{width:100%;max-width:440px;background:rgba(20,20,20,.85);border:1px solid #3a0a0f;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:16px;text-align:left}
-label{font-size:15px;color:#bbb;display:flex;flex-direction:column;gap:6px}
-input[type=number]{-webkit-user-select:text;user-select:text;background:#111;border:1px solid #444;color:#fff;border-radius:8px;padding:12px;font-size:18px;width:100%}
-input[type=number]:focus{outline:none;border-color:#e11d2e}
-.row{display:flex;gap:12px}.row label{flex:1}
-button,.filebtn{background:#e11d2e;color:#fff;border:0;border-radius:10px;padding:14px 28px;font-size:18px;font-weight:700;cursor:pointer;transition:.15s;text-align:center}
-button:hover,.filebtn:hover{background:#ff2b3f}button:active{transform:scale(.97)}
-button.ghost,.filebtn{background:transparent;border:1px solid #e11d2e;color:#ff5b69}
-button.ghost:hover,.filebtn:hover{background:#2a0a0e}
-.btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
-#thumbs{display:flex;flex-wrap:wrap;gap:6px}
-#thumbs img{width:52px;height:52px;object-fit:cover;border-radius:6px;border:1px solid #555;-webkit-user-drag:none}
-.err{color:#ff5b69;font-size:14px;min-height:18px}
-.small{font-size:14px;color:#888}
+:root {
+  --bg: #090909;
+  --panel: #171717;
+  --red: #e53935;
+  --red-dark: #a51f1c;
+  --text: #f5f5f5;
+  --muted: #aaa;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Noto Sans TC", sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+button, input {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+  transition: transform .15s, opacity .15s;
+}
+
+button:active {
+  transform: scale(.98);
+}
+
+button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-color: #090909;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.background::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, .55);
+  backdrop-filter: blur(2px);
+  transition: background .2s, backdrop-filter .2s;
+}
+
+/* 完成日：提高亮度，減少遮罩及模糊 */
+.background.completion-bg {
+  filter: brightness(1.25);
+}
+
+.background.completion-bg::after {
+  background: rgba(0, 0, 0, .30);
+  backdrop-filter: blur(0);
+}
+
+/* 倒數：圖片清晰，不加暗色遮罩、不模糊 */
+.background.countdown-bg {
+  filter: none;
+}
+
+.background.countdown-bg::after {
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+.topbar {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  padding: 18px 20px 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.interrupt-btn {
+  padding: 10px 15px;
+  border: 1px solid rgba(255, 255, 255, .35);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, .75);
+  color: white;
+  font-size: 14px;
+}
+
+.interrupt-btn:hover {
+  background: #35100f;
+  border-color: var(--red);
+}
+
+main {
+  width: min(560px, 100%);
+  margin: 0 auto;
+  padding: 20px 22px 50px;
+}
+
+h1 {
+  margin: 10px 0 8px;
+  text-align: center;
+  font-size: clamp(27px, 7vw, 38px);
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #c4c4c4;
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+
+.panel {
+  padding: 22px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 18px;
+  background: rgba(15, 15, 15, .88);
+  box-shadow: 0 12px 36px rgba(0,0,0,.2);
+}
+
+.field {
+  margin-bottom: 20px;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 9px;
+  font-weight: 700;
+}
+
+input[type="number"] {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #444;
+  border-radius: 10px;
+  color: white;
+  background: #222;
+  outline: none;
+}
+
+input[type="number"]:focus {
+  border-color: var(--red);
+}
+
+.range-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.hint {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.upload-area {
+  display: block;
+  padding: 20px 15px;
+  border: 1px dashed #777;
+  border-radius: 12px;
+  background: rgba(255,255,255,.035);
+  text-align: center;
+  cursor: pointer;
+}
+
+.upload-area:hover {
+  border-color: var(--red);
+}
+
+.upload-area strong {
+  display: block;
+  margin-bottom: 7px;
+}
+
+.upload-area span {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+#photoInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.photo-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.photo-item {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #222;
+}
+
+.photo-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-item button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: rgba(0,0,0,.8);
+  color: white;
+  font-size: 17px;
+}
+
+.primary-btn {
+  width: 100%;
+  padding: 15px 18px;
+  border-radius: 12px;
+  background: var(--red);
+  color: white;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.primary-btn:hover {
+  background: #f04440;
+}
+
+.secondary-btn {
+  width: 100%;
+  padding: 13px 18px;
+  margin-top: 12px;
+  border: 1px solid #555;
+  border-radius: 12px;
+  background: #222;
+  color: white;
+}
+
+.status {
+  min-height: 22px;
+  margin: 12px 0 0;
+  color: #ff9b97;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.day-number {
+  margin: 36px 0 10px;
+  text-align: center;
+  font-size: clamp(65px, 18vw, 100px);
+  line-height: 1;
+  font-weight: 900;
+  color: white;
+  text-shadow: 0 3px 25px rgba(0,0,0,.5);
+}
+
+.day-label {
+  margin-bottom: 35px;
+  text-align: center;
+  color: #e5e5e5;
+  font-size: 18px;
+}
+
+.center-screen {
+  min-height: 65vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.center-screen h2 {
+  margin: 0 0 18px;
+  font-size: clamp(32px, 9vw, 48px);
+  font-weight: 900;
+  text-shadow: 0 3px 20px rgba(0,0,0,.6);
+}
+
+.center-screen p {
+  line-height: 1.8;
+  color: #eee;
+}
+
+.result-panel {
+  width: 100%;
+  padding: 25px 20px;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 18px;
+  background: rgba(0,0,0,.65);
+}
+
+.result-panel .primary-btn {
+  margin-top: 15px;
+}
+
+.timer-number {
+  color: #fff;
+  font-size: clamp(76px, 20vw, 130px);
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 3px 22px rgba(0,0,0,.45);
+}
+
+.timer-caption {
+  margin-top: 16px;
+  color: #fff;
+  font-size: 15px;
+  text-shadow: 0 2px 8px rgba(0,0,0,.65);
+}
+
+.countdown-mode {
+  overflow: hidden;
+}
+
+.countdown-mode .topbar {
+  position: fixed;
+  z-index: 20;
+  top: 0;
+  right: 0;
+  width: auto;
+  padding: 14px;
+}
+
+.countdown-mode main {
+  display: none;
+}
+
+.countdown-mode .countdown-screen {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.countdown-mode .countdown-screen .timer-number,
+.countdown-mode .countdown-screen .timer-caption {
+  pointer-events: none;
+}
+
+/* 倒數期間只有數字、圖片與中斷按鈕 */
+.countdown-screen {
+  display: none;
+}
+
+.countdown-mode .interrupt-btn {
+  pointer-events: auto;
+  border-color: rgba(255,255,255,.75);
+  background: rgba(0,0,0,.8);
+  color: white;
+  font-weight: 700;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@media (max-width: 420px) {
+  main {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .panel {
+    padding: 17px;
+  }
+
+  .topbar {
+    padding: 12px 14px 0;
+  }
+}
 </style>
 </head>
+
 <body>
-<div id="bg"></div>
+<div id="background" class="background"></div>
 
-<!-- 設定 -->
-<section class="screen" id="s-setup">
-  <h1>長期堅持挑戰</h1>
-  <div class="card">
-    <div class="row">
-      <label>最小天數<input type="number" id="min" value="10" min="1"></label>
-      <label>最大天數<input type="number" id="max" value="20" min="1"></label>
-    </div>
-    <label>背景照片（可多選，完成日時隨機顯示）
-      <span class="filebtn" id="pickBtn">選擇照片</span>
-      <input type="file" id="files" accept="image/*" multiple hidden>
-    </label>
-    <div id="thumbs"></div>
-    <div class="err" id="err"></div>
-    <button id="start">開始挑戰</button>
-  </div>
-</section>
+<div class="app" id="app">
+  <header class="topbar">
+    <button id="interruptBtn" class="interrupt-btn" type="button">
+      中斷挑戰
+    </button>
+  </header>
 
-<!-- 日常 -->
-<section class="screen" id="s-day">
-  <p>挑戰進行中</p>
-  <h2>第</h2>
-  <div class="big" id="dayNum">1</div>
-  <h2>天</h2>
-  <p id="dayMsg">今天必須繼續堅持</p>
-  <button id="next">下一天</button>
-</section>
+  <main id="main">
+    <section id="setupScreen">
+      <h1>長期堅持挑戰</h1>
+      <div class="subtitle">
+        設定你的挑戰天數，堅持下去。<br>
+        真正的完成日將由系統決定。
+      </div>
 
-<!-- 完成日 / 模擬完成日 -->
-<section class="screen" id="s-done">
-  <p>第 <span id="doneDay"></span> 天</p>
-  <h2>恭喜你堅持到了這天</h2>
-  <button id="cdStart">開始倒數</button>
-</section>
+      <div class="panel">
+        <div class="field">
+          <label>挑戰天數範圍</label>
+          <div class="range-row">
+            <div>
+              <div class="hint">最少天數</div>
+              <input id="minDays" type="number" min="1" max="3650" value="10">
+            </div>
+            <div>
+              <div class="hint">最多天數</div>
+              <input id="maxDays" type="number" min="1" max="3650" value="20">
+            </div>
+          </div>
+          <div class="hint">
+            完成日會在設定的範圍內隨機產生。
+          </div>
+        </div>
 
-<section class="screen" id="s-count">
-  <p>倒數中</p>
-  <div class="big" id="cdNum">100</div>
-</section>
+        <div class="field">
+          <label>背景圖片（選填）</label>
+          <label class="upload-area" for="photoInput">
+            <strong>＋ 選擇圖片</strong>
+            <span>可一次選擇多張圖片</span>
+            <span>圖片會自動縮小並壓縮後儲存</span>
+          </label>
+          <input id="photoInput" type="file" accept="image/*" multiple>
+          <div id="photoList" class="photo-list"></div>
+          <div id="photoHint" class="hint">尚未選擇圖片。</div>
+        </div>
 
-<section class="screen" id="s-fake">
-  <h2>其實今天還不能完成喔</h2>
-  <p>繼續堅持下去……</p>
-</section>
+        <button id="startBtn" class="primary-btn" type="button">
+          開始挑戰
+        </button>
+        <p id="setupStatus" class="status" role="status"></p>
+      </div>
+    </section>
 
-<section class="screen" id="s-win">
-  <h1>完成！</h1>
-  <div class="big" id="winNum">5</div>
-</section>
+    <section id="dailyScreen" class="hidden">
+      <h1>長期堅持挑戰</h1>
+      <div class="day-number" id="dayNumber">1</div>
+      <div class="day-label">今天是挑戰的第 <span id="dayLabel">1</span> 天</div>
+      <div class="panel">
+        <p style="text-align:center;line-height:1.8;margin-top:0">
+          每一天都是新的開始。<br>
+          準備好了，就繼續下一天。
+        </p>
+        <button id="nextBtn" class="primary-btn" type="button">
+          下一天
+        </button>
+      </div>
+    </section>
 
-<section class="screen" id="s-ask">
-  <h2>你是否成功達成？</h2>
-  <div class="btns">
-    <button id="yes">成功</button>
-    <button class="ghost" id="no">失敗</button>
-  </div>
-</section>
+    <section id="fakeScreen" class="hidden center-screen">
+      <div class="result-panel">
+        <h2>等等！</h2>
+        <p>其實今天還不能完成喔。</p>
+        <p>挑戰還要繼續，請再堅持一下。</p>
+      </div>
+    </section>
 
-<section class="screen" id="s-end">
-  <h1>挑戰成功</h1>
-  <p>你完成了長期堅持挑戰，意志力無人能擋。</p>
-  <button id="restart">重新開始</button>
-</section>
+    <section id="completeScreen" class="hidden center-screen">
+      <div class="result-panel">
+        <h2>完成！</h2>
+        <p>你已經抵達真正的完成日。</p>
+        <p id="confirmHint">請在倒數結束前確認完成。</p>
+        <button id="confirmBtn" class="primary-btn" type="button">
+          確認完成
+        </button>
+        <p id="confirmTimer" class="hint"></p>
+      </div>
+    </section>
+
+    <section id="endScreen" class="hidden center-screen">
+      <div class="result-panel">
+        <h2>挑戰成功！</h2>
+        <p>恭喜你完成這次的長期堅持挑戰。</p>
+        <button id="homeBtn" class="primary-btn" type="button">
+          回到主頁
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <section id="countdownScreen" class="countdown-screen">
+    <div id="timerNumber" class="timer-number">100</div>
+    <div class="timer-caption">請稍候……</div>
+  </section>
+</div>
 
 <script>
-(function(){
-  var KEY = 'longChallengeState_v1';
-  var $ = function(id){ return document.getElementById(id); };
-  var screens = ['setup','day','done','count','fake','win','ask','end'];
-  var state = null;           // 持久化資料
-  var photos = [];            // 設定畫面暫存照片
-  var timer = null;           // 目前計時器
-  var currentBg = null;
+(() => {
+  "use strict";
 
-  function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+  const STORAGE_KEY = "longTermChallenge_v3";
+  const MAX_PHOTOS = 8;
+  const MAX_IMAGE_DIMENSION = 1280;
+  const IMAGE_QUALITY = 0.76;
+  const MAX_TOTAL_IMAGE_CHARS = 3_200_000;
 
-  function show(name){
-    screens.forEach(function(s){ $('s-'+s).classList.toggle('show', s===name); });
-    var useBg = ['done','count','fake','win','ask'].indexOf(name) >= 0 && currentBg;
-    var bg = $('bg');
-    bg.classList.toggle('on', !!useBg);
-    bg.style.backgroundImage = useBg ? 'url("'+currentBg+'")' : 'none';
-  }
+  const $ = id => document.getElementById(id);
 
-  function save(){
-    try { localStorage.setItem(KEY, JSON.stringify(state)); }
-    catch(e){
-      // 容量不足時，嘗試不含照片保存進度
-      try { var c = Object.assign({}, state, {photos: []}); localStorage.setItem(KEY, JSON.stringify(c)); } catch(e2){}
-    }
-  }
-  function load(){
-    try { var r = localStorage.getItem(KEY); return r ? JSON.parse(r) : null; } catch(e){ return null; }
-  }
-  function clearSave(){ try { localStorage.removeItem(KEY); } catch(e){} }
-
-  function stopTimer(){ if(timer){ clearInterval(timer); clearTimeout(timer); timer = null; } }
-
-  function plan(min,max){
-    var secret = rnd(min,max);
-    var cands = [];
-    for(var d=min+1; d<secret; d++) cands.push(d);
-    var n = Math.min(rnd(0,2), cands.length), fakes = [];
-    while(n-- > 0){
-      var i = rnd(0,cands.length-1);
-      fakes.push(cands.splice(i,1)[0]);
-    }
-    fakes.sort(function(a,b){return a-b;});
-    return {secret:secret, fakes:fakes};
-  }
-
-  function pickBg(){
-    var p = state && state.photos || [];
-    currentBg = p.length ? p[rnd(0,p.length-1)] : null;
-  }
-
-  // ---------- 設定 ----------
-  $('pickBtn').onclick = function(){ $('files').click(); };
-  $('files').onchange = function(e){
-    var list = Array.prototype.slice.call(e.target.files);
-    list.forEach(function(f){
-      var fr = new FileReader();
-      fr.onload = function(){
-        var img = new Image();
-        img.onload = function(){
-          var max = 1280, w = img.width, h = img.height, s = Math.min(1, max/Math.max(w,h));
-          var c = document.createElement('canvas');
-          c.width = Math.round(w*s); c.height = Math.round(h*s);
-          c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-          photos.push(c.toDataURL('image/jpeg',0.75));
-          renderThumbs();
-        };
-        img.src = fr.result;
-      };
-      fr.readAsDataURL(f);
-    });
-    e.target.value = '';
-  };
-  function renderThumbs(){
-    $('thumbs').innerHTML = '';
-    photos.forEach(function(src,i){
-      var im = document.createElement('img');
-      im.src = src; im.title = '點擊移除';
-      im.onclick = function(){ photos.splice(i,1); renderThumbs(); };
-      $('thumbs').appendChild(im);
-    });
-  }
-
-  $('start').onclick = function(){
-    var min = parseInt($('min').value,10), max = parseInt($('max').value,10);
-    if(!(min>=1) || !(max>=1)){ $('err').textContent = '請輸入有效的天數（至少 1 天）'; return; }
-    if(min>max){ $('err').textContent = '最小天數不可大於最大天數'; return; }
-    $('err').textContent = '';
-    var p = plan(min,max);
-    state = {min:min, max:max, secret:p.secret, day:1, fakes:p.fakes, photos:photos.slice(), started:true};
-    save();
-    enterDay();
+  const elements = {
+    background: $("background"),
+    body: document.body,
+    setup: $("setupScreen"),
+    daily: $("dailyScreen"),
+    fake: $("fakeScreen"),
+    complete: $("completeScreen"),
+    end: $("endScreen"),
+    countdown: $("countdownScreen"),
+    interrupt: $("interruptBtn"),
+    minDays: $("minDays"),
+    maxDays: $("maxDays"),
+    photoInput: $("photoInput"),
+    photoList: $("photoList"),
+    photoHint: $("photoHint"),
+    setupStatus: $("setupStatus"),
+    start: $("startBtn"),
+    next: $("nextBtn"),
+    dayNumber: $("dayNumber"),
+    dayLabel: $("dayLabel"),
+    timerNumber: $("timerNumber"),
+    confirm: $("confirmBtn"),
+    confirmTimer: $("confirmTimer"),
+    home: $("homeBtn")
   };
 
-  // ---------- 每日 ----------
-  function isReal(){ return state.day === state.secret; }
-  function isFake(){ return state.fakes.indexOf(state.day) >= 0; }
+  let state = createEmptyState();
+  let countdownInterval = null;
+  let confirmInterval = null;
+  let fakeTimeout = null;
+  let selectedPhotos = [];
+  let imageObjectUrls = [];
+  let extensionProbability = 0.8;
+  let extensionCheckedForCycle = false;
+  let transitionToken = 0;
 
-  function enterDay(){
-    stopTimer();
-    if(isReal() || isFake()){
-      pickBg();
-      $('doneDay').textContent = state.day;
-      show('done');
+  function createEmptyState() {
+    return {
+      phase: "setup",
+      minDays: 10,
+      maxDays: 20,
+      currentDay: 1,
+      secretDay: null,
+      fakeDays: [],
+      photos: [],
+      countdownDeadline: null,
+      countdownKind: null,
+      confirmDeadline: null
+    };
+  }
+
+  function clearAllTimers() {
+    clearInterval(countdownInterval);
+    clearInterval(confirmInterval);
+    clearTimeout(fakeTimeout);
+    countdownInterval = null;
+    confirmInterval = null;
+    fakeTimeout = null;
+  }
+
+  function revokeObjectUrls() {
+    for (const url of imageObjectUrls) {
+      URL.revokeObjectURL(url);
+    }
+    imageObjectUrls = [];
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      return true;
+    } catch (error) {
+      console.error("儲存失敗：", error);
+      return false;
+    }
+  }
+
+  function readSavedState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw);
+
+      if (!parsed || typeof parsed !== "object") return null;
+      if (!Array.isArray(parsed.photos)) parsed.photos = [];
+      if (!Array.isArray(parsed.fakeDays)) parsed.fakeDays = [];
+
+      return parsed;
+    } catch (error) {
+      console.warn("讀取儲存資料失敗：", error);
+      return null;
+    }
+  }
+
+  function showScreen(name) {
+    const screens = {
+      setup: elements.setup,
+      daily: elements.daily,
+      fake: elements.fake,
+      complete: elements.complete,
+      end: elements.end
+    };
+
+    Object.values(screens).forEach(screen => {
+      screen.classList.add("hidden");
+    });
+
+    if (screens[name]) screens[name].classList.remove("hidden");
+
+    state.phase = name;
+    elements.body.classList.remove("countdown-mode");
+
+    if (name === "complete") {
+      elements.background.classList.remove("countdown-bg");
+      elements.background.classList.add("completion-bg");
+    } else if (name !== "daily") {
+      elements.background.classList.remove("completion-bg");
+    }
+
+    if (name === "daily") renderDay();
+    saveState();
+  }
+
+  function setCountdownAppearance() {
+    elements.body.classList.add("countdown-mode");
+    elements.background.classList.remove("completion-bg");
+    elements.background.classList.add("countdown-bg");
+  }
+
+  function setBackground(photo, mode = "normal") {
+    elements.background.classList.remove("completion-bg", "countdown-bg");
+
+    if (photo && photo.dataUrl) {
+      elements.background.style.backgroundImage =
+        `url("${photo.dataUrl}")`;
     } else {
-      currentBg = null;
-      $('dayNum').textContent = state.day;
-      show('day');
+      elements.background.style.backgroundImage = "none";
+    }
+
+    if (mode === "completion") {
+      elements.background.classList.add("completion-bg");
+    } else if (mode === "countdown") {
+      elements.background.classList.add("countdown-bg");
     }
   }
-  $('next').onclick = function(){
-    state.day++;
-    save();
-    enterDay();
-  };
 
-  // ---------- 倒數 ----------
-  $('cdStart').onclick = function(){
-    var remain = 100, prob = 0.8;
-    $('cdNum').textContent = remain;
-    show('count');
-    stopTimer();
-    timer = setInterval(function(){
-      remain--;
-      if(remain === 3){
-        if(Math.random() < prob){
-          remain += 20;
-          prob *= 0.8;
+  function chooseRandomPhoto(mode = "normal") {
+    if (!state.photos.length) {
+      setBackground(null, mode);
+      return;
+    }
+
+    const index = Math.floor(Math.random() * state.photos.length);
+    setBackground(state.photos[index], mode);
+  }
+
+  function renderDay() {
+    elements.dayNumber.textContent = String(state.currentDay);
+    elements.dayLabel.textContent = String(state.currentDay);
+    chooseRandomPhoto("normal");
+  }
+
+  function randomInteger(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function shuffle(array) {
+    const result = [...array];
+
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+
+    return result;
+  }
+
+  function prepareChallenge(minDays, maxDays, photos) {
+    const secretDay = randomInteger(minDays, maxDays);
+
+    // 假完成日必須嚴格大於最少天數且嚴格小於真正完成日。
+    const possibleFakeDays = [];
+
+    for (let day = minDays + 1; day < secretDay; day++) {
+      possibleFakeDays.push(day);
+    }
+
+    const fakeCount = Math.min(
+      possibleFakeDays.length,
+      randomInteger(0, 2)
+    );
+
+    const fakeDays = shuffle(possibleFakeDays).slice(0, fakeCount).sort((a, b) => a - b);
+
+    state = {
+      phase: "daily",
+      minDays,
+      maxDays,
+      currentDay: 1,
+      secretDay,
+      fakeDays,
+      photos,
+      countdownDeadline: null,
+      countdownKind: null,
+      confirmDeadline: null
+    };
+
+    extensionProbability = 0.8;
+    extensionCheckedForCycle = false;
+
+    saveState();
+    renderDay();
+
+    // 若允許設定最少天數為 1，真正完成日可能也是第 1 天。
+    if (state.currentDay === state.secretDay) {
+      beginEvent("real");
+    }
+  }
+
+  function advanceDay() {
+    if (state.phase !== "daily") return;
+
+    const nextDay = state.currentDay + 1;
+
+    // 不允許跳過真正完成日。
+    if (nextDay > state.secretDay) {
+      beginEvent("real");
+      return;
+    }
+
+    state.currentDay = nextDay;
+    saveState();
+
+    if (state.fakeDays.includes(state.currentDay)) {
+      beginEvent("fake");
+      return;
+    }
+
+    if (state.currentDay === state.secretDay) {
+      beginEvent("real");
+      return;
+    }
+
+    renderDay();
+  }
+
+  function beginEvent(kind) {
+    clearAllTimers();
+    transitionToken++;
+
+    state.countdownKind = kind;
+    state.countdownDeadline = Date.now() + 100_000;
+    state.confirmDeadline = null;
+    state.phase = "countdown";
+
+    chooseRandomPhoto("countdown");
+    setCountdownAppearance();
+    elements.timerNumber.textContent = "100";
+
+    extensionProbability = 0.8;
+    extensionCheckedForCycle = false;
+
+    saveState();
+    runCountdown();
+  }
+
+  function runCountdown() {
+    clearInterval(countdownInterval);
+    setCountdownAppearance();
+
+    function tick() {
+      if (state.phase !== "countdown" || !state.countdownDeadline) {
+        clearInterval(countdownInterval);
+        return;
+      }
+
+      let remaining = state.countdownDeadline - Date.now();
+
+      // 每一輪倒數進入最後三秒時，只進行一次機率判定。
+      if (remaining <= 3000 && !extensionCheckedForCycle) {
+        extensionCheckedForCycle = true;
+
+        if (Math.random() < extensionProbability) {
+          state.countdownDeadline += 20_000;
+          extensionProbability *= 0.8;
+          remaining = state.countdownDeadline - Date.now();
+          saveState();
         }
       }
-      $('cdNum').textContent = Math.max(remain,0);
-      if(remain <= 0){
-        stopTimer();
-        finishCountdown();
-      }
-    }, 1000);
-  };
 
-  function finishCountdown(){
-    if(isReal()){
-      var t = 5;
-      $('winNum').textContent = t;
-      show('win');
-      timer = setInterval(function(){
-        t--;
-        $('winNum').textContent = Math.max(t,0);
-        if(t <= 0){ stopTimer(); show('ask'); }
-      }, 1000);
+      if (remaining <= 0) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+        finishCountdown();
+        return;
+      }
+
+      elements.timerNumber.textContent =
+        String(Math.ceil(remaining / 1000));
+    }
+
+    tick();
+    countdownInterval = setInterval(tick, 200);
+  }
+
+  function finishCountdown() {
+    const kind = state.countdownKind;
+
+    state.countdownDeadline = null;
+    state.countdownKind = null;
+    saveState();
+
+    if (kind === "fake") {
+      showFakeResult();
     } else {
-      show('fake');
-      timer = setTimeout(function(){
-        timer = null;
-        // 這個模擬完成日已結束，移除後回到日常畫面
-        state.fakes = state.fakes.filter(function(d){ return d !== state.day; });
-        save();
-        currentBg = null;
-        $('dayNum').textContent = state.day;
-        show('day');
-      }, 4000);
+      showRealCompletion();
     }
   }
 
-  // ---------- 結果 ----------
-  $('yes').onclick = function(){
-    stopTimer();
-    clearSave();
-    state = null;
-    currentBg = null;
-    show('end');
-  };
-  $('no').onclick = function(){
-    var p = plan(state.min, state.max);
-    state.secret = p.secret; state.fakes = p.fakes; state.day = 1;
-    save();
-    enterDay();
-  };
-  $('restart').onclick = function(){
-    stopTimer();
-    clearSave();
-    state = null; photos = []; currentBg = null;
-    renderThumbs();
-    show('setup');
-  };
+  function showFakeResult() {
+    clearAllTimers();
+    showScreen("fake");
+    chooseRandomPhoto("normal");
 
-  // ---------- 啟動：恢復進度 ----------
-  var saved = load();
-  if(saved && saved.started){
-    state = saved;
-    state.photos = state.photos || [];
-    state.fakes = state.fakes || [];
-    $('min').value = state.min; $('max').value = state.max;
-    enterDay();
-  } else {
-    show('setup');
+    const token = transitionToken;
+
+    fakeTimeout = setTimeout(() => {
+      if (token !== transitionToken || state.phase !== "fake") return;
+
+      // 假完成提示結束後回到同一天，不自動跳過下一天。
+      showScreen("daily");
+    }, 3500);
   }
 
-  // 禁止文字選取與右鍵
-  document.addEventListener('selectstart', function(e){
-    if(!(e.target && e.target.tagName === 'INPUT')) e.preventDefault();
+  function showRealCompletion() {
+    clearAllTimers();
+
+    state.phase = "complete";
+    state.confirmDeadline = Date.now() + 5000;
+
+    chooseRandomPhoto("completion");
+    showScreen("complete");
+
+    // showScreen 會儲存狀態，重新設定五秒期限。
+    state.confirmDeadline = Date.now() + 5000;
+    saveState();
+
+    updateConfirmationTimer();
+
+    confirmInterval = setInterval(() => {
+      updateConfirmationTimer();
+
+      if (Date.now() >= state.confirmDeadline) {
+        clearInterval(confirmInterval);
+        confirmInterval = null;
+        restartAfterFailure();
+      }
+    }, 100);
+  }
+
+  function updateConfirmationTimer() {
+    if (!state.confirmDeadline) return;
+
+    const remaining = Math.max(0, state.confirmDeadline - Date.now());
+    elements.confirmTimer.textContent =
+      `剩餘 ${Math.ceil(remaining / 1000)} 秒`;
+  }
+
+  function confirmCompletion() {
+    if (state.phase !== "complete") return;
+    if (!state.confirmDeadline || Date.now() >= state.confirmDeadline) return;
+
+    clearInterval(confirmInterval);
+    confirmInterval = null;
+
+    state.phase = "end";
+    state.confirmDeadline = null;
+    state.countdownDeadline = null;
+    state.countdownKind = null;
+
+    // 成功後清除挑戰資料，不再保留照片。
+    state.photos = [];
+    state.fakeDays = [];
+    state.secretDay = null;
+    saveState();
+
+    showScreen("end");
+    setBackground(null);
+    saveState();
+  }
+
+  function restartAfterFailure() {
+    clearAllTimers();
+
+    const minDays = state.minDays;
+    const maxDays = state.maxDays;
+    const photos = [...state.photos];
+
+    prepareChallenge(minDays, maxDays, photos);
+  }
+
+  function interruptChallenge() {
+    const confirmed = window.confirm(
+      "確定要中斷挑戰嗎？\n這會清除所有挑戰資料與已儲存的圖片，無法復原。"
+    );
+
+    if (!confirmed) return;
+
+    transitionToken++;
+    clearAllTimers();
+    revokeObjectUrls();
+
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.warn("清除本機儲存資料失敗：", error);
+    }
+
+    state = createEmptyState();
+    selectedPhotos = [];
+    extensionProbability = 0.8;
+    extensionCheckedForCycle = false;
+
+    elements.minDays.value = "10";
+    elements.maxDays.value = "20";
+    elements.photoInput.value = "";
+    elements.photoList.replaceChildren();
+    elements.photoHint.textContent = "尚未選擇圖片。";
+    elements.setupStatus.textContent = "";
+
+    setBackground(null);
+    showScreen("setup");
+  }
+
+  /*
+   * 圖片上傳重寫：
+   * 1. 僅接受圖片 MIME 類型。
+   * 2. 使用 createImageBitmap，失敗時改用 Image。
+   * 3. 縮小至最長邊 1280px。
+   * 4. 轉成 JPEG，減少 localStorage 使用量。
+   * 5. 限制張數與總字元量。
+   * 6. 完成整批處理及容量檢查後才更新選取結果。
+   */
+
+  function loadImage(file) {
+    return new Promise((resolve, reject) => {
+      if (!file.type || !file.type.startsWith("image/")) {
+        reject(new Error(`${file.name} 不是有效的圖片檔案。`));
+        return;
+      }
+
+      if ("createImageBitmap" in window) {
+        createImageBitmap(file)
+          .then(bitmap => {
+            resolve({
+              source: bitmap,
+              width: bitmap.width,
+              height: bitmap.height,
+              close: () => bitmap.close()
+            });
+          })
+          .catch(() => loadImageWithElement(file).then(resolve, reject));
+
+        return;
+      }
+
+      loadImageWithElement(file).then(resolve, reject);
+    });
+  }
+
+  function loadImageWithElement(file) {
+    return new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve({
+          source: img,
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+          close: () => {}
+        });
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error(`${file.name} 無法讀取，請換一張圖片。`));
+      };
+
+      img.src = objectUrl;
+    });
+  }
+
+  async function compressImage(file) {
+    const loaded = await loadImage(file);
+
+    try {
+      const { source, width, height } = loaded;
+
+      if (!width || !height) {
+        throw new Error(`${file.name} 的圖片尺寸無效。`);
+      }
+
+      const scale = Math.min(
+        1,
+        MAX_IMAGE_DIMENSION / Math.max(width, height)
+      );
+
+      const targetWidth = Math.max(1, Math.round(width * scale));
+      const targetHeight = Math.max(1, Math.round(height * scale));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+
+      const context = canvas.getContext("2d", { alpha: false });
+
+      if (!context) {
+        throw new Error("無法建立圖片處理環境。");
+      }
+
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, targetWidth, targetHeight);
+      context.drawImage(source, 0, 0, targetWidth, targetHeight);
+
+      const dataUrl = canvas.toDataURL("image/jpeg", IMAGE_QUALITY);
+
+      if (!dataUrl.startsWith("data:image/jpeg;base64,")) {
+        throw new Error(`${file.name} 壓縮失敗。`);
+      }
+
+      return {
+        name: file.name,
+        type: "image/jpeg",
+        dataUrl
+      };
+    } finally {
+      loaded.close();
+    }
+  }
+
+  function renderPhotoPreviews(photos) {
+    revokeObjectUrls();
+    elements.photoList.replaceChildren();
+
+    photos.forEach((photo, index) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "photo-item";
+
+      const img = document.createElement("img");
+      img.alt = photo.name || `背景圖片 ${index + 1}`;
+      img.loading = "lazy";
+      img.src = photo.dataUrl;
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "×";
+      remove.setAttribute("aria-label", `移除圖片 ${index + 1}`);
+
+      remove.addEventListener("click", () => {
+        selectedPhotos.splice(index, 1);
+        renderPhotoPreviews(selectedPhotos);
+        updatePhotoHint();
+      });
+
+      wrapper.append(img, remove);
+      elements.photoList.appendChild(wrapper);
+    });
+
+    updatePhotoHint();
+  }
+
+  function updatePhotoHint() {
+    if (!selectedPhotos.length) {
+      elements.photoHint.textContent = "尚未選擇圖片。";
+      return;
+    }
+
+    const totalChars = selectedPhotos.reduce(
+      (sum, photo) => sum + photo.dataUrl.length, 0
+    );
+
+    elements.photoHint.textContent =
+      `已選擇 ${selectedPhotos.length} 張圖片，已壓縮。` +
+      `總資料量約 ${(totalChars * 0.75 / 1024 / 1024).toFixed(2)} MB。`;
+  }
+
+  async function handlePhotoUpload(event) {
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+
+    if (!files.length) return;
+
+    elements.setupStatus.textContent = "";
+
+    const availableSlots = MAX_PHOTOS - selectedPhotos.length;
+
+    if (availableSlots <= 0) {
+      elements.setupStatus.textContent =
+        `最多只能選擇 ${MAX_PHOTOS} 張圖片，請先移除部分圖片。`;
+      return;
+    }
+
+    if (files.length > availableSlots) {
+      elements.setupStatus.textContent =
+        `目前最多還能新增 ${availableSlots} 張圖片，請重新選擇。`;
+      return;
+    }
+
+    elements.photoHint.textContent = "正在處理圖片，請稍候……";
+    elements.photoInput.disabled = true;
+    elements.start.disabled = true;
+
+    try {
+      const newlyCompressed = [];
+
+      for (const file of files) {
+        newlyCompressed.push(await compressImage(file));
+      }
+
+      const combined = [...selectedPhotos, ...newlyCompressed];
+
+      const totalChars = combined.reduce(
+        (sum, photo) => sum + photo.dataUrl.length, 0
+      );
+
+      if (totalChars > MAX_TOTAL_IMAGE_CHARS) {
+        throw new Error(
+          "圖片壓縮後的總資料量仍太大，請減少圖片張數或選擇較小的圖片。"
+        );
+      }
+
+      // 先確認可以儲存，再更新畫面。
+      const previous = selectedPhotos;
+      selectedPhotos = combined;
+
+      if (!savePhotosToStorageTest(combined)) {
+        selectedPhotos = previous;
+        throw new Error(
+          "瀏覽器本機儲存空間不足，圖片沒有加入。請減少圖片或使用較小的檔案。"
+        );
+      }
+
+      renderPhotoPreviews(selectedPhotos);
+      elements.setupStatus.textContent = "";
+    } catch (error) {
+      elements.setupStatus.textContent =
+        error instanceof Error ? error.message : "圖片處理失敗，請再試一次。";
+      updatePhotoHint();
+    } finally {
+      elements.photoInput.disabled = false;
+      elements.start.disabled = false;
+    }
+  }
+
+  function savePhotosToStorageTest(photos) {
+    // 用獨立暫存鍵測試空間；不覆寫現有挑戰資料。
+    const testKey = STORAGE_KEY + "_image_test";
+
+    try {
+      localStorage.setItem(testKey, JSON.stringify(photos));
+      localStorage.removeItem(testKey);
+      return true;
+    } catch (error) {
+      try {
+        localStorage.removeItem(testKey);
+      } catch (_) {}
+      return false;
+    }
+  }
+
+  function startChallenge() {
+    const minDays = Number.parseInt(elements.minDays.value, 10);
+    const maxDays = Number.parseInt(elements.maxDays.value, 10);
+
+    if (!Number.isInteger(minDays) || !Number.isInteger(maxDays)) {
+      elements.setupStatus.textContent = "請輸入有效的天數。";
+      return;
+    }
+
+    if (minDays < 1 || maxDays < 1 || minDays > 3650 || maxDays > 3650) {
+      elements.setupStatus.textContent = "天數必須介於 1 到 3650 天之間。";
+      return;
+    }
+
+    if (minDays > maxDays) {
+      elements.setupStatus.textContent = "最少天數不可大於最多天數。";
+      return;
+    }
+
+    const totalChars = selectedPhotos.reduce(
+      (sum, photo) => sum + photo.dataUrl.length, 0
+    );
+
+    if (totalChars > MAX_TOTAL_IMAGE_CHARS) {
+      elements.setupStatus.textContent =
+        "圖片資料量太大，請移除部分圖片後再開始。";
+      return;
+    }
+
+    elements.setupStatus.textContent = "";
+
+    prepareChallenge(minDays, maxDays, [...selectedPhotos]);
+
+    if (!saveState()) {
+      elements.setupStatus.textContent =
+        "挑戰已在本頁啟動，但瀏覽器可能無法保存資料。請減少圖片後再試。";
+    }
+  }
+
+  function restoreSavedState() {
+    const saved = readSavedState();
+
+    if (!saved) {
+      state = createEmptyState();
+      showScreen("setup");
+      return;
+    }
+
+    const validPhases = [
+      "setup", "daily", "countdown", "fake", "complete", "end"
+    ];
+
+    if (!validPhases.includes(saved.phase)) {
+      state = createEmptyState();
+      showScreen("setup");
+      return;
+    }
+
+    state = { ...createEmptyState(), ...saved };
+
+    if (
+      !Number.isInteger(state.minDays) ||
+      !Number.isInteger(state.maxDays) ||
+      state.minDays < 1 ||
+      state.maxDays < state.minDays ||
+      !Number.isInteger(state.currentDay) ||
+      state.currentDay < 1
+    ) {
+      state = createEmptyState();
+      showScreen("setup");
+      return;
+    }
+
+    selectedPhotos = [...state.photos];
+    elements.minDays.value = String(state.minDays);
+    elements.maxDays.value = String(state.maxDays);
+    renderPhotoPreviews(selectedPhotos);
+
+    if (state.phase === "countdown") {
+      if (
+        !Number.isFinite(state.countdownDeadline) ||
+        !["fake", "real"].includes(state.countdownKind)
+      ) {
+        showScreen("daily");
+        return;
+      }
+
+      if (state.countdownDeadline <= Date.now()) {
+        finishCountdown();
+      } else {
+        chooseRandomPhoto("countdown");
+        runCountdown();
+      }
+
+      return;
+    }
+
+    if (state.phase === "complete") {
+      if (!Number.isFinite(state.confirmDeadline)) {
+        restartAfterFailure();
+        return;
+      }
+
+      if (Date.now() >= state.confirmDeadline) {
+        restartAfterFailure();
+        return;
+      }
+
+      chooseRandomPhoto("completion");
+      showScreen("complete");
+      updateConfirmationTimer();
+
+      confirmInterval = setInterval(() => {
+        updateConfirmationTimer();
+
+        if (Date.now() >= state.confirmDeadline) {
+          clearInterval(confirmInterval);
+          confirmInterval = null;
+          restartAfterFailure();
+        }
+      }, 100);
+
+      return;
+    }
+
+    if (state.phase === "fake") {
+      showFakeResult();
+      return;
+    }
+
+    if (state.phase === "end") {
+      showScreen("end");
+      setBackground(null);
+      return;
+    }
+
+    if (state.phase === "daily") {
+      showScreen("daily");
+      return;
+    }
+
+    showScreen("setup");
+  }
+
+  elements.photoInput.addEventListener("change", handlePhotoUpload);
+  elements.start.addEventListener("click", startChallenge);
+  elements.next.addEventListener("click", advanceDay);
+  elements.interrupt.addEventListener("click", interruptChallenge);
+  elements.confirm.addEventListener("click", confirmCompletion);
+
+  elements.home.addEventListener("click", () => {
+    clearAllTimers();
+    revokeObjectUrls();
+
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.warn(error);
+    }
+
+    state = createEmptyState();
+    selectedPhotos = [];
+
+    elements.minDays.value = "10";
+    elements.maxDays.value = "20";
+    elements.photoList.replaceChildren();
+    elements.photoHint.textContent = "尚未選擇圖片。";
+    elements.setupStatus.textContent = "";
+    elements.photoInput.value = "";
+
+    setBackground(null);
+    showScreen("setup");
   });
-  document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+
+  restoreSavedState();
 })();
 </script>
 </body>
