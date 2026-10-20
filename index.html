@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>長期堅持挑戰</title>
+    <title>長期禁欲挑戰</title>
     <style>
         * {
             box-sizing: border-box;
@@ -271,7 +271,7 @@
 
     <!-- Setup Screen -->
     <div id="setup-screen" class="container">
-        <h1>長期堅持挑戰</h1>
+        <h1>長期禁慾挑戰</h1>
         <p>設定你的天數區間與照片，考驗你的意志力與自我控制。</p>
         
         <div class="form-group">
@@ -298,7 +298,7 @@
 
     <!-- Daily Screen -->
     <div id="daily-screen" class="container hidden">
-        <h1>長期堅持挑戰</h1>
+        <h1>長期禁慾挑戰</h1>
         <div class="day-display" id="day-display">第 1 天</div>
         <div class="day-status" id="day-status">今天必須繼續堅持</div>
         
@@ -532,7 +532,7 @@
         function handleCountdownZero() {
             if (fakeDays.includes(currentDay)) {
                 timerDisplay.textContent = '0';
-                showToast('其實今天還不能完成喔');
+                showToast('其實今天還不能射喔');
                 setTimeout(() => {
                     toastContainer.innerHTML = '';
                     currentScreen = 'daily';
